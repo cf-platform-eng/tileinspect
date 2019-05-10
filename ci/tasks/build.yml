@@ -8,4 +8,8 @@ run:
   path: make
   dir: source
   args:
-    - test
+    - build-all
+
+outputs:
+  - name: build
+    path: source/build
