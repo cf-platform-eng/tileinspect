@@ -5,11 +5,15 @@ inputs:
   - name: source
 
 run:
-  path: make
-  dir: source
+  path: /bin/bash
   args:
-    - build-all
-
+    - -exc
+    - |
+      export VERSION=$(cat version/version)
+      pushd source
+      make build-all
+      popd
+      
 outputs:
   - name: build
     path: source/build

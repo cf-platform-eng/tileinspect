@@ -5,8 +5,8 @@ import (
 	"io"
 
 	"github.com/MakeNowJust/heredoc"
-	"github.com/cf-platform-eng/isv-ci-toolkit/tileinspect/stemcell"
-	"github.com/cf-platform-eng/isv-ci-toolkit/tileinspect/stemcell/stemcellfakes"
+	"github.com/cf-platform-eng/tileinspect/stemcell"
+	"github.com/cf-platform-eng/tileinspect/stemcell/stemcellfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gbytes"

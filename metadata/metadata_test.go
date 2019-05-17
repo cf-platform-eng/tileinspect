@@ -8,8 +8,8 @@ import (
 	"os"
 
 	"github.com/MakeNowJust/heredoc"
-	"github.com/cf-platform-eng/isv-ci-toolkit/tileinspect"
-	"github.com/cf-platform-eng/isv-ci-toolkit/tileinspect/metadata"
+	"github.com/cf-platform-eng/tileinspect"
+	"github.com/cf-platform-eng/tileinspect/metadata"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gbytes"

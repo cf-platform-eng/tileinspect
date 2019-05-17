@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/cf-platform-eng/isv-ci-toolkit/tileinspect"
-	"github.com/cf-platform-eng/isv-ci-toolkit/tileinspect/metadata"
+	"github.com/cf-platform-eng/tileinspect"
+	"github.com/cf-platform-eng/tileinspect/metadata"
 	. "github.com/pkg/errors"
 )
 
