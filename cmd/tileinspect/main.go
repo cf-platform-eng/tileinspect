@@ -43,7 +43,7 @@ func main() {
 	_, err = parser.AddCommand(
 		"version",
 	    "print version",
-        "print marman version",
+        "print tileinspect version",
         &version.VersionOpt{})
 	if err != nil {
 		fmt.Println("Could not add version command")
