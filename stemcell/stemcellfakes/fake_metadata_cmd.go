@@ -5,7 +5,7 @@ import (
 	io "io"
 	sync "sync"
 
-	stemcell "github.com/cf-platform-eng/isv-ci-toolkit/tileinspect/stemcell"
+	stemcell "github.com/cf-platform-eng/tileinspect/stemcell"
 )
 
 type FakeMetadataCmd struct {

@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cf-platform-eng/isv-ci-toolkit/tileinspect/stemcell"
+	"github.com/cf-platform-eng/tileinspect/stemcell"
 	flags "github.com/jessevdk/go-flags"
 
-	"github.com/cf-platform-eng/isv-ci-toolkit/tileinspect"
-	"github.com/cf-platform-eng/isv-ci-toolkit/tileinspect/metadata"
+	"github.com/cf-platform-eng/tileinspect"
+	"github.com/cf-platform-eng/tileinspect/metadata"
+	"github.com/cf-platform-eng/tileinspect/version"
 )
 
 var metadataOpts metadata.Config
@@ -38,6 +39,16 @@ func main() {
 		fmt.Println("Could not add stemcell command")
 		os.Exit(1)
 	}
+
+	_, err = parser.AddCommand(
+		"version",
+	    "print version",
+        "print marman version",
+        &version.VersionOpt{})
+	if err != nil {
+		fmt.Println("Could not add version command")
+		os.Exit(1)
+	}	
 
 	_, err = parser.Parse()
 	if err != nil {

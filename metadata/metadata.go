@@ -9,7 +9,7 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/cf-platform-eng/isv-ci-toolkit/tileinspect"
+	"github.com/cf-platform-eng/tileinspect"
 	"github.com/ghodss/yaml"
 	. "github.com/pkg/errors"
 )
