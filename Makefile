@@ -52,6 +52,9 @@ build-darwin: build/tileinspect-darwin
 build/tileinspect-darwin:
 	GOARCH=amd64 GOOS=darwin go build -o build/tileinspect-darwin -ldflags ${LDFLAGS} ./cmd/tileinspect/main.go
 
+build-image: build/tileinspect-linux
+	docker build --tag cfplatformeng/needs:${VERSION} --file Dockerfile .
+
 test: deps lint
 	ginkgo -r .
 
