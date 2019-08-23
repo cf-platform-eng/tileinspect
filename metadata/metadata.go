@@ -3,7 +3,6 @@ package metadata
 import (
 	"archive/zip"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -55,16 +54,49 @@ func (cmd *Config) dumpFile(zipFile *zip.File, out io.Writer) error {
 	}
 }
 
-func (cmd *Config) WriteMetadata(out io.Writer) error {
+func (cmd *Config) findMetadataFile() (*zip.File, error) {
 	tile, err := zip.OpenReader(cmd.Tile)
 	if err != nil {
-		return Wrap(err, fmt.Sprintf("could not unzip %s", cmd.Tile))
+		return nil, Wrapf(err, "could not unzip %s", cmd.Tile)
 	}
-	defer tile.Close()
 
 	metadataFile := findInZip(`metadata/.*\.yml`, tile)
 	if metadataFile == nil {
-		return errors.New("metadata file not found")
+		return nil, errors.New("metadata file not found")
+	}
+
+	return metadataFile, nil
+}
+
+func (cmd *Config) LoadMetadata(target interface{}) error {
+	metadataFile, err := cmd.findMetadataFile()
+	if err != nil {
+		return err
+	}
+
+	file, err := metadataFile.Open()
+	if err != nil {
+		return Wrap(err, "could not open the metadata file")
+	}
+	defer file.Close()
+
+	buf, err := ioutil.ReadAll(file)
+	if err != nil {
+		return Wrap(err, "could not read the metadata file")
+	}
+
+	err = yaml.Unmarshal(buf, &target)
+	if err != nil {
+		return Wrap(err, "could not load the metadata file")
+	}
+
+	return nil
+}
+
+func (cmd *Config) WriteMetadata(out io.Writer) error {
+	metadataFile, err := cmd.findMetadataFile()
+	if err != nil {
+		return err
 	}
 
 	err = cmd.dumpFile(metadataFile, out)

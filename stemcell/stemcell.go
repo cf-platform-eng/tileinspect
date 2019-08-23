@@ -14,7 +14,7 @@ import (
 
 //go:generate counterfeiter MetadataCmd
 type MetadataCmd interface {
-	WriteMetadata(out io.Writer) error
+	LoadMetadata(target interface{}) error
 }
 
 type Config struct {
@@ -28,22 +28,9 @@ type TileMetadata struct {
 
 func (cmd *Config) WriteStemcell(out io.Writer) error {
 	var tileMetadata TileMetadata
-
-	pr, pw := io.Pipe()
-	errorChan := make(chan error)
-	go func(errorChan chan error) {
-		err := json.NewDecoder(pr).Decode(&tileMetadata)
-		errorChan <- err
-	}(errorChan)
-
-	err := cmd.MetadataCmd.WriteMetadata(pw)
+	err := cmd.MetadataCmd.LoadMetadata(&tileMetadata)
 	if err != nil {
-		return Wrap(err, "failed to read tile metadata")
-	}
-
-	err = <-errorChan
-	if err != nil {
-		return Wrap(err, "failed to decode stemcell criteria JSON")
+		return Wrap(err, "failed to load tile metadata")
 	}
 
 	version, ok := tileMetadata.StemcellCriteria["version"].(string)
@@ -66,7 +53,6 @@ func (cmd *Config) Execute(args []string) error {
 		TileConfig: tileinspect.TileConfig{
 			Tile: cmd.Tile,
 		},
-		Format: "json",
 	}
 	return cmd.WriteStemcell(os.Stdout)
 }
