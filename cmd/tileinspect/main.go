@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/cf-platform-eng/tileinspect/checkconfig"
 	"os"
+
+	"github.com/cf-platform-eng/tileinspect/checkconfig"
 
 	"github.com/cf-platform-eng/tileinspect/stemcell"
 	"github.com/jessevdk/go-flags"

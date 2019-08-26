@@ -2,6 +2,7 @@ package stemcell_test
 
 import (
 	"encoding/json"
+
 	"github.com/MakeNowJust/heredoc"
 	"github.com/cf-platform-eng/tileinspect/stemcell"
 	"github.com/cf-platform-eng/tileinspect/stemcell/stemcellfakes"

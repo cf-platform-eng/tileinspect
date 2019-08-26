@@ -1,136 +1,161 @@
 package checkconfig
 
 import (
-    "errors"
-    "fmt"
-    "github.com/cf-platform-eng/tileinspect"
-    "github.com/cf-platform-eng/tileinspect/metadata"
-    "github.com/ghodss/yaml"
-    . "github.com/pkg/errors"
-    "io"
-    "io/ioutil"
-    "os"
-    "strings"
+	"errors"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	"strings"
+
+	"github.com/cf-platform-eng/tileinspect"
+	"github.com/cf-platform-eng/tileinspect/metadata"
+	"github.com/ghodss/yaml"
+	. "github.com/pkg/errors"
 )
 
 //go:generate counterfeiter MetadataCmd
 type MetadataCmd interface {
-    LoadMetadata(target interface{}) error
+	LoadMetadata(target interface{}) error
 }
 
 type Config struct {
-    tileinspect.TileConfig
-    MetadataCmd    MetadataCmd
-    ConfigFilePath string `long:"config" short:"c" description:"path to config file" required:"true"`
+	tileinspect.TileConfig
+	MetadataCmd    MetadataCmd
+	ConfigFilePath string `long:"config" short:"c" description:"path to config file" required:"true"`
 }
 
 type ConfigFile struct {
-    ProductProperties map[string]*ConfigFileProperty `json:"product-properties"`
+	ProductProperties map[string]*ConfigFileProperty `json:"product-properties"`
 }
 
 type ConfigFileProperty struct {
-    Type  string      `json:"type"`
-    Value interface{} `json:"value"`
+	Type  string      `json:"type"`
+	Value interface{} `json:"value"`
 }
 
 type TileProperty struct {
-    Name            string           `json:"name"`
-    Type            string           `json:"type"`
-    Configurable    bool             `json:"configurable"`
-    Default         interface{}      `json:"default"`
-    Optional        bool             `json:"optional"`
-    ChildProperties []TileProperties `json:"option_templates"`
+	Name            string           `json:"name"`
+	Type            string           `json:"type"`
+	Configurable    bool             `json:"configurable"`
+	Default         interface{}      `json:"default"`
+	Optional        bool             `json:"optional"`
+	ChildProperties []TileProperties `json:"option_templates"`
 }
 type TileProperties struct {
-    Name               string         `json:"name"`
-    PropertyBlueprints []TileProperty `json:"property_blueprints"`
-    SelectValue        string         `json:"select_value"`
+	Name               string         `json:"name"`
+	PropertyBlueprints []TileProperty `json:"property_blueprints"`
+	SelectValue        string         `json:"select_value"`
 }
 
 func stringInSlice(a string, list []string) bool {
-    for _, b := range list {
-        if b == a {
-            return true
-        }
-    }
-    return false
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
 
-func checkTileProperties(propertyPrefix string, configFile *ConfigFile, tileProperties []TileProperty) ([]string, []error) {
-    var errs []error
-    var keys []string
+func checkTileProperties(checkForRequiredProperties bool, propertyPrefix string, configValues map[string]*ConfigFileProperty, tileProperties []TileProperty) ([]string, []error) {
+	var errs []error
+	var validKeys []string
 
-    for _, property := range tileProperties {
-        key := propertyPrefix + "." + property.Name
-        keys = append(keys, key)
+	for _, property := range tileProperties {
+		propertyKey := propertyPrefix + "." + property.Name
+		validKeys = append(validKeys, propertyKey)
 
-        if configFile.ProductProperties[key] != nil {
-            if !property.Configurable {
-                errs = append(errs, fmt.Errorf("the config file contains a property (%s) that is not configurable", key))
-            }
-        }
+		if configValues[propertyKey] != nil {
+			if !property.Configurable {
+				errs = append(errs, fmt.Errorf("the config file contains a property (%s) that is not configurable", propertyKey))
+			}
+		}
 
-        if property.Type == "selector" {
-            for _, option := range property.ChildProperties {
-                childPrefix := key + "." + option.Name
-                childKeys, childErrs := checkTileProperties(childPrefix, configFile, option.PropertyBlueprints)
-                keys = append(keys, childKeys...)
-                errs = append(errs, childErrs...)
-            }
-        }
-    }
+		if checkForRequiredProperties {
+			if property.Configurable && !property.Optional && property.Default == nil {
+				if configValues[propertyKey] == nil {
+					errs = append(errs, fmt.Errorf("the config file is missing a required property (%s)", propertyKey))
+				}
+			}
+		}
 
-    return keys, errs
+		if property.Type == "selector" {
+			for _, option := range property.ChildProperties {
+				isSelected := configValues[propertyKey] != nil && configValues[propertyKey].Value == option.SelectValue
+
+				childPrefix := propertyKey + "." + option.Name
+				childKeys, childErrs := checkTileProperties(isSelected, childPrefix, configValues, option.PropertyBlueprints)
+				validKeys = append(validKeys, childKeys...)
+				errs = append(errs, childErrs...)
+
+				if !isSelected {
+					for _, childKey := range childKeys {
+						if configValues[childKey] != nil {
+							errs = append(errs, fmt.Errorf("the config file contains a property (%s) that is not selected", childKey))
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return validKeys, errs
 }
 
 func (cmd *Config) CompareProperties(configFile *ConfigFile, tileProperties *TileProperties) []error {
-    prefix := ".properties"
-    keys, errs := checkTileProperties(prefix, configFile, tileProperties.PropertyBlueprints)
+	prefix := ".properties"
+	validKeys, errs := checkTileProperties(true, prefix, configFile.ProductProperties, tileProperties.PropertyBlueprints)
 
-    for key := range configFile.ProductProperties {
-        if strings.Index(key, prefix) != 0 {
-            errs = append(errs, fmt.Errorf("the config file contains a property (%s) that does not start with %s", key, prefix))
-        } else if !stringInSlice(key, keys) {
-            errs = append(errs, fmt.Errorf("the config file contains a property (%s) that is not defined in the tile", key))
-        }
-    }
+	for key := range configFile.ProductProperties {
+		if strings.Index(key, prefix) != 0 {
+			errs = append(errs, fmt.Errorf("the config file contains a property (%s) that does not start with %s", key, prefix))
+		} else if !stringInSlice(key, validKeys) {
+			errs = append(errs, fmt.Errorf("the config file contains a property (%s) that is not defined in the tile", key))
+		}
+	}
 
-    return errs
+	return errs
 }
 
 func (cmd *Config) CheckConfig(out io.Writer) error {
-    configFileContents, err := ioutil.ReadFile(cmd.ConfigFilePath)
+	configFileContents, err := ioutil.ReadFile(cmd.ConfigFilePath)
 
-    if err != nil {
-        return Wrap(err, "config file does not exist")
-    }
+	if err != nil {
+		return Wrap(err, "config file does not exist")
+	}
 
-    configFile := &ConfigFile{}
-    err = yaml.Unmarshal(configFileContents, configFile)
-    if err != nil {
-        return Wrap(err, "config file is not valid JSON or YAML")
-    }
+	configFile := &ConfigFile{}
+	err = yaml.Unmarshal(configFileContents, configFile)
+	if err != nil {
+		return Wrap(err, "config file is not valid JSON or YAML")
+	}
 
-    tileProperties := &TileProperties{}
-    err = cmd.MetadataCmd.LoadMetadata(tileProperties)
-    if err != nil {
-        return Wrap(err, "failed to load tile metadata")
-    }
+	tileProperties := &TileProperties{}
+	err = cmd.MetadataCmd.LoadMetadata(tileProperties)
+	if err != nil {
+		return Wrap(err, "failed to load tile metadata")
+	}
 
-    errs := cmd.CompareProperties(configFile, tileProperties)
-    if len(errs) > 0 {
-        return errors.New("Lots of errors")
-    }
+	errs := cmd.CompareProperties(configFile, tileProperties)
+	if len(errs) > 0 {
+		var allErrors []string
 
-    _, _ = out.Write([]byte("The config file appears to be valid"))
-    return nil
+		for _, err := range errs {
+			allErrors = append(allErrors, err.Error())
+		}
+
+		return errors.New(strings.Join(allErrors, "\n"))
+	}
+
+	_, _ = out.Write([]byte("The config file appears to be valid\n"))
+	return nil
 }
 
 func (cmd *Config) Execute(args []string) error {
-    cmd.MetadataCmd = &metadata.Config{
-        TileConfig: tileinspect.TileConfig{
-            Tile: cmd.Tile,
-        },
-    }
-    return cmd.CheckConfig(os.Stdout)
+	cmd.MetadataCmd = &metadata.Config{
+		TileConfig: tileinspect.TileConfig{
+			Tile: cmd.Tile,
+		},
+	}
+	return cmd.CheckConfig(os.Stdout)
 }
