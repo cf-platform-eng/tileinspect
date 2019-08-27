@@ -72,7 +72,7 @@ var _ = Describe("CheckConfig", func() {
 		It("returns an error", func() {
 			err := cmd.CheckConfig(buffer)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("config file does not exist"))
+			Expect(err.Error()).To(Equal("failed to read the config file: /this/path/does/not/exist.json: open /this/path/does/not/exist.json: no such file or directory"))
 		})
 	})
 
@@ -88,14 +88,30 @@ var _ = Describe("CheckConfig", func() {
 		It("returns an error", func() {
 			err := cmd.CheckConfig(buffer)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("config file is not valid JSON or YAML"))
+			Expect(err.Error()).To(Equal("the config file does not contain valid JSON or YAML: error unmarshaling JSON: json: cannot unmarshal string into Go value of type checkconfig.ConfigFile"))
 		})
 	})
 
 	Context("config file is empty json", func() {
 		BeforeEach(func() {
 			var err error
-			configFile, err = makeConfigFile("{}")
+			configFile, err = makeConfigFile(`{}`)
+			Expect(err).ToNot(HaveOccurred())
+
+			cmd.ConfigFilePath = configFile.Name()
+		})
+
+		It("displays errors for missing required fields", func() {
+			err := cmd.CheckConfig(buffer)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring(`the config file is missing a "product-properties" section`))
+		})
+	})
+
+	Context("json config file has an empty product properties", func() {
+		BeforeEach(func() {
+			var err error
+			configFile, err = makeConfigFile(`{"product-properties": {}}`)
 			Expect(err).ToNot(HaveOccurred())
 
 			cmd.ConfigFilePath = configFile.Name()
@@ -126,7 +142,7 @@ var _ = Describe("CheckConfig", func() {
 			cmd.ConfigFilePath = configFile.Name()
 		})
 
-		It("says that there were not issues found", func() {
+		It("says that there were no issues found", func() {
 			err := cmd.CheckConfig(buffer)
 			Expect(err).ToNot(HaveOccurred())
 			Eventually(buffer).Should(Say("The config file appears to be valid"))
@@ -166,6 +182,24 @@ var _ = Describe("CheckConfig", func() {
 		BeforeEach(func() {
 			var err error
 			configFile, err = makeConfigFile("---")
+			Expect(err).ToNot(HaveOccurred())
+
+			cmd.ConfigFilePath = configFile.Name()
+		})
+
+		It("displays errors for missing required fields", func() {
+			err := cmd.CheckConfig(buffer)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring(`the config file is missing a "product-properties" section`))
+		})
+	})
+
+	Context("yaml config file has an empty product properties", func() {
+		BeforeEach(func() {
+			var err error
+			configFile, err = makeConfigFile(heredoc.Doc(`---
+				product-properties: {}
+			`))
 			Expect(err).ToNot(HaveOccurred())
 
 			cmd.ConfigFilePath = configFile.Name()

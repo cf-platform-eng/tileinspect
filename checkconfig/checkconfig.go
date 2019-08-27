@@ -119,32 +119,33 @@ func (cmd *Config) CompareProperties(configFile *ConfigFile, tileProperties *Til
 
 func (cmd *Config) CheckConfig(out io.Writer) error {
 	configFileContents, err := ioutil.ReadFile(cmd.ConfigFilePath)
-
 	if err != nil {
-		return Wrap(err, "config file does not exist")
+		return Wrapf(err, "failed to read the config file: %s", cmd.ConfigFilePath)
 	}
 
 	configFile := &ConfigFile{}
 	err = yaml.Unmarshal(configFileContents, configFile)
 	if err != nil {
-		return Wrap(err, "config file is not valid JSON or YAML")
+		return Wrap(err, "the config file does not contain valid JSON or YAML")
+	}
+
+	if configFile.ProductProperties == nil {
+		return errors.New(`the config file is missing a "product-properties" section`)
 	}
 
 	tileProperties := &TileProperties{}
 	err = cmd.MetadataCmd.LoadMetadata(tileProperties)
 	if err != nil {
-		return Wrap(err, "failed to load tile metadata")
+		return Wrap(err, "failed to load metadata from the tile")
 	}
 
 	errs := cmd.CompareProperties(configFile, tileProperties)
 	if len(errs) > 0 {
-		var allErrors []string
-
-		for _, err := range errs {
-			allErrors = append(allErrors, err.Error())
+		errorStrings := make([]string, len(errs))
+		for i := range errs {
+			errorStrings[i] = errs[i].Error()
 		}
-
-		return errors.New(strings.Join(allErrors, "\n"))
+		return errors.New(strings.Join(errorStrings, "\n"))
 	}
 
 	_, _ = out.Write([]byte("The config file appears to be valid\n"))
