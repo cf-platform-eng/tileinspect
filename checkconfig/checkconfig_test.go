@@ -604,4 +604,162 @@ var _ = Describe("CompareProperties", func() {
 			})
 		})
 	})
+
+	Context("Tile with dropdown_select property", func() {
+		BeforeEach(func() {
+			tileProperties = &checkconfig.TileProperties{
+				PropertyBlueprints: []checkconfig.TileProperty{
+					{
+						Name:         "flow-rate",
+						Type:         "dropdown_select",
+						Configurable: true,
+						Options: []checkconfig.Option{
+							{
+								Name:  "low",
+								Label: "Low",
+							},
+							{
+								Name:  "medium",
+								Label: "Medium",
+							},
+							{
+								Name:  "high",
+								Label: "High",
+							},
+						},
+					},
+				},
+			}
+		})
+
+		Context("Empty config file", func() {
+			BeforeEach(func() {
+				configFile = &checkconfig.ConfigFile{}
+			})
+
+			It("should pass", func() {
+				// This is because when using `dropdown_select`, if there is no specified default and the property is not optional, it will pick the first option in the list
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(BeEmpty())
+			})
+		})
+
+		Context("Empty config file with default", func() {
+			BeforeEach(func() {
+				configFile = &checkconfig.ConfigFile{}
+				tileProperties.PropertyBlueprints[0].Default = "med"
+			})
+
+			It("should pass", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(BeEmpty())
+			})
+		})
+
+		Context("Config file gives an invalid value", func() {
+			BeforeEach(func() {
+				configFile = &checkconfig.ConfigFile{
+					ProductProperties: map[string]*checkconfig.ConfigFileProperty{
+						".properties.flow-rate": {
+							Value: "ludicrous",
+						},
+					},
+				}
+			})
+
+			It("should fail with the invalid property value", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(1))
+				Expect(errs[0].Error()).To(Equal("the config file value for property (.properties.flow-rate) is invalid: ludicrous"))
+			})
+		})
+
+		Context("Config file gives a valid value", func() {
+			BeforeEach(func() {
+				configFile = &checkconfig.ConfigFile{
+					ProductProperties: map[string]*checkconfig.ConfigFileProperty{
+						".properties.flow-rate": {
+							Value: "high",
+						},
+					},
+				}
+			})
+
+			It("should pass", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(BeEmpty())
+			})
+		})
+	})
+
+	Context("Tile with secret property", func() {
+		BeforeEach(func() {
+			tileProperties = &checkconfig.TileProperties{
+				PropertyBlueprints: []checkconfig.TileProperty{
+					{
+						Name:         "my-password",
+						Type:         "secret",
+						Configurable: true,
+					},
+				},
+			}
+		})
+
+		Context("Config file gives an invalid format", func() {
+			BeforeEach(func() {
+				configFile = &checkconfig.ConfigFile{
+					ProductProperties: map[string]*checkconfig.ConfigFileProperty{
+						".properties.my-password": {
+							Value: "shhhh",
+						},
+					},
+				}
+			})
+
+			It("should fail with the invalid property value", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(1))
+				Expect(errs[0].Error()).To(Equal("the config file value for property (.properties.my-password) is not in the right format. Should be {\"secret\": \"<SECRET VALUE>\"}"))
+			})
+		})
+
+		Context("Config file gives an invalid value", func() {
+			BeforeEach(func() {
+				configFile = &checkconfig.ConfigFile{
+					ProductProperties: map[string]*checkconfig.ConfigFileProperty{
+						".properties.my-password": {
+							Value: map[string]interface{} {
+								"secret": []int{1, 2, 3},
+							},
+						},
+					},
+				}
+			})
+
+			It("should fail with the invalid property value", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(1))
+				Expect(errs[0].Error()).To(Equal("the config file value for property (.properties.my-password) is not in the right format. Should be {\"secret\": \"<SECRET VALUE>\"}"))
+			})
+		})
+
+		Context("Config file gives a valid value", func() {
+			BeforeEach(func() {
+				configFile = &checkconfig.ConfigFile{
+					ProductProperties: map[string]*checkconfig.ConfigFileProperty{
+						".properties.my-password": {
+							Value: map[string]interface{} {
+								"secret": "shhhh",
+							},
+						},
+					},
+				}
+			})
+
+			It("should pass", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(BeEmpty())
+			})
+		})
+	})
 })

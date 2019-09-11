@@ -35,17 +35,22 @@ type ConfigFileProperty struct {
 }
 
 type TileProperty struct {
-	Name            string           `json:"name"`
-	Type            string           `json:"type"`
-	Configurable    bool             `json:"configurable"`
-	Default         interface{}      `json:"default"`
-	Optional        bool             `json:"optional"`
+	Name            string      `json:"name"`
+	Type            string      `json:"type"`
+	Configurable    bool        `json:"configurable"`
+	Default         interface{} `json:"default"`
+	Optional        bool        `json:"optional"`
+	Options         []Option
 	ChildProperties []TileProperties `json:"option_templates"`
 }
 type TileProperties struct {
 	Name               string         `json:"name"`
 	PropertyBlueprints []TileProperty `json:"property_blueprints"`
 	SelectValue        string         `json:"select_value"`
+}
+type Option struct {
+	Name  string `json:"name"`
+	Label string `json:"label"`
 }
 
 func stringInSlice(a string, list []string) bool {
@@ -64,24 +69,25 @@ func checkTileProperties(checkForRequiredProperties bool, propertyPrefix string,
 	for _, property := range tileProperties {
 		propertyKey := propertyPrefix + "." + property.Name
 		validKeys = append(validKeys, propertyKey)
+		hasValue := configValues[propertyKey] != nil
 
-		if configValues[propertyKey] != nil {
-			if !property.Configurable {
-				errs = append(errs, fmt.Errorf("the config file contains a property (%s) that is not configurable", propertyKey))
-			}
+		if hasValue && !property.Configurable {
+			errs = append(errs, fmt.Errorf("the config file contains a property (%s) that is not configurable", propertyKey))
 		}
 
 		if checkForRequiredProperties {
-			if property.Configurable && !property.Optional && property.Default == nil {
-				if configValues[propertyKey] == nil {
-					errs = append(errs, fmt.Errorf("the config file is missing a required property (%s)", propertyKey))
+			if property.Configurable && !property.Optional {
+				if property.Default == nil && property.Type != "dropdown_select" {
+					if configValues[propertyKey] == nil {
+						errs = append(errs, fmt.Errorf("the config file is missing a required property (%s)", propertyKey))
+					}
 				}
 			}
 		}
 
 		if property.Type == "selector" {
 			for _, option := range property.ChildProperties {
-				isSelected := configValues[propertyKey] != nil && configValues[propertyKey].Value == option.SelectValue
+				isSelected := (hasValue && configValues[propertyKey].Value == option.SelectValue) || (!hasValue && property.Default == option.SelectValue)
 
 				childPrefix := propertyKey + "." + option.Name
 				childKeys, childErrs := checkTileProperties(isSelected, childPrefix, configValues, option.PropertyBlueprints)
@@ -95,6 +101,28 @@ func checkTileProperties(checkForRequiredProperties bool, propertyPrefix string,
 						}
 					}
 				}
+			}
+		}
+
+		if property.Type == "dropdown_select" && hasValue {
+			validValue := false
+			for _, option := range property.Options {
+				if configValues[propertyKey].Value == option.Name {
+					validValue = true
+				}
+			}
+			if !validValue {
+				errs = append(errs, fmt.Errorf("the config file value for property (%s) is invalid: %s", propertyKey, configValues[propertyKey].Value))
+			}
+		}
+
+		if property.Type == "secret" && hasValue {
+			var value map[string]interface{}
+			var ok bool
+			if value, ok = configValues[propertyKey].Value.(map[string]interface{}); !ok {
+				errs = append(errs, fmt.Errorf("the config file value for property (%s) is not in the right format. Should be {\"secret\": \"<SECRET VALUE>\"}", propertyKey))
+			} else if secret, ok := value["secret"].(string); !ok || secret == "" {
+				errs = append(errs, fmt.Errorf("the config file value for property (%s) is not in the right format. Should be {\"secret\": \"<SECRET VALUE>\"}", propertyKey))
 			}
 		}
 	}
