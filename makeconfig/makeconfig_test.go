@@ -287,4 +287,81 @@ var _ = Describe("MakeConfig", func() {
 			Expect(config.ProductProperties[".properties.browser.chrome.required-string"].Value).To(Equal("SAMPLE_STRING_VALUE"))
 		})
 	})
+
+	Describe("value overrides", func() {
+		BeforeEach(func() {
+			metadataCmd.LoadMetadataStub = func(target interface{}) error {
+				err := yaml.Unmarshal([]byte(heredoc.Doc(`
+			---
+			property_blueprints:
+			  - name: basic-property
+			    type: string
+			    configurable: true
+			  - name: password
+			    type: secret
+			    configurable: true
+			  - name: continent
+			    configurable: true
+			    type: selector
+			    option_templates:
+			      - name: north-america
+			        select_value: North America
+			        property_blueprints:
+			          - name: required-string
+			            configurable: true
+			            type: string
+			      - name: australia
+			        select_value: Australia
+			        property_blueprints:
+			          - name: required-string
+			            configurable: true
+			            type: string
+			  - name: browser
+			    configurable: true
+			    type: selector
+			    default: Google Chrome
+			    option_templates:
+			      - name: explorer
+			        select_value: Internet Explorer
+			        property_blueprints:
+			          - name: required-string
+			            configurable: true
+			            type: string
+			      - name: chrome
+			        select_value: Google Chrome
+			        property_blueprints:
+			          - name: required-string
+			            configurable: true
+			            type: string
+            `)), &target)
+				Expect(err).ToNot(HaveOccurred())
+				return nil
+			}
+
+			cmd.Values = make(map[string]string)
+			cmd.Values[".properties.basic-property"] = "yes"
+			cmd.Values[".properties.browser"] = "Internet Explorer"
+			cmd.Values[".properties.continent"] = "Australia"
+			cmd.Values[".properties.password"] = "super-secret"
+		})
+
+		It("returns a config with selector values", func() {
+			config, err := cmd.MakeConfig()
+			Expect(err).ToNot(HaveOccurred())
+			Expect(config).ToNot(BeNil())
+			Expect(config.ProductProperties).ToNot(BeNil())
+			Expect(config.ProductProperties).To(HaveKey(".properties.basic-property"))
+			Expect(config.ProductProperties[".properties.basic-property"].Value).To(Equal("yes"))
+			Expect(config.ProductProperties).To(HaveKey(".properties.password"))
+			Expect(config.ProductProperties[".properties.password"].Value).To(HaveKeyWithValue("secret", "super-secret"))
+			Expect(config.ProductProperties).To(HaveKey(".properties.continent"))
+			Expect(config.ProductProperties[".properties.continent"].Value).To(Equal("Australia"))
+			Expect(config.ProductProperties).To(HaveKey(".properties.continent.australia.required-string"))
+			Expect(config.ProductProperties[".properties.continent.australia.required-string"].Value).To(Equal("SAMPLE_STRING_VALUE"))
+			Expect(config.ProductProperties).To(HaveKey(".properties.browser"))
+			Expect(config.ProductProperties[".properties.browser"].Value).To(Equal("Internet Explorer"))
+			Expect(config.ProductProperties).To(HaveKey(".properties.browser.explorer.required-string"))
+			Expect(config.ProductProperties[".properties.browser.explorer.required-string"].Value).To(Equal("SAMPLE_STRING_VALUE"))
+		})
+	})
 })

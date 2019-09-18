@@ -45,6 +45,16 @@ var _ = Describe("tileinspect make-config", func() {
 		steps.And("the config file uses the first option for the selector")
 	})
 
+	Scenario("Tile with a selector and value override", func() {
+		steps.Given("I have a tile with a selector")
+
+		steps.When("I run tileinspect make-config with a custom value selected")
+
+		steps.Then("I see the template config file")
+		steps.And("the config file uses the option for the selector that I gave on the cli")
+	})
+
+
 	steps.Define(func(define Definitions) {
 		var (
 			tile       *os.File
@@ -154,9 +164,25 @@ var _ = Describe("tileinspect make-config", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
+		define.When(`^I run tileinspect make-config with a custom value selected$`, func() {
+			cmd = exec.Command("go", "run", "../cmd/tileinspect/main.go", "make-config", "-f", "yaml", "-t", tile.Name(), "-v", ".properties.continent:Australia")
+			var err error
+			output, err = cmd.Output()
+			Expect(err).ToNot(HaveOccurred())
+		})
+
 		define.Then(`^I see the template config file$`, func() {
 			err := yaml.Unmarshal(output, &configFile)
 			Expect(err).ToNot(HaveOccurred())
+		})
+
+		define.Then(`^the config file uses the option for the selector that I gave on the cli$`, func() {
+			Expect(configFile).ToNot(BeNil())
+			Expect(configFile.ProductProperties).ToNot(BeNil())
+			Expect(configFile.ProductProperties).To(HaveKey(".properties.continent"))
+			Expect(configFile.ProductProperties[".properties.continent"].Value).To(Equal("Australia"))
+			Expect(configFile.ProductProperties).To(HaveKey(".properties.continent.australia.required-string"))
+			Expect(configFile.ProductProperties[".properties.continent.australia.required-string"].Value).To(Equal("SAMPLE_STRING_VALUE"))
 		})
 	})
 })

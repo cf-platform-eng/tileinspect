@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/MakeNowJust/heredoc"
 	"github.com/cf-platform-eng/tileinspect/checkconfig"
 	"github.com/cf-platform-eng/tileinspect/makeconfig"
 
@@ -37,7 +38,17 @@ func main() {
 	_, err = parser.AddCommand(
 		"make-config",
 		"Make a template config file",
-		"Make a template config file based on the property blueprints of this tile",
+		heredoc.Doc(`Make a template config file based on the property blueprints of this tile.
+		The config file will contain a value for each selected, configurable property.
+		The value will be, in order:
+		* a value defined using the "--value" parameter
+		* a default value defined in the tile
+		* for dropdown_select and selector properties, the first option
+		* a sample value that is meant to be replaced by the user
+		
+		Using the -v, --value parameter is useful for setting known values or for selecting a preferred option in a selector.
+		
+		Example: tileinspect make-config -t my-tile.pivotal -v .properties.network_selector:"Use TCP"`),
 		&makeConfigOpts,
 	)
 	if err != nil {

@@ -45,7 +45,7 @@ func checkTileProperties(checkForRequiredProperties bool, propertyPrefix string,
 		if checkForRequiredProperties {
 			if property.Configurable && !property.Optional {
 				if property.Default == nil && property.Type != "dropdown_select" {
-					if configValues[propertyKey] == nil {
+					if !hasValue {
 						errs = append(errs, fmt.Errorf("the config file is missing a required property (%s)", propertyKey))
 					}
 				}
