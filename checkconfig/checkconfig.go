@@ -25,15 +25,6 @@ type Config struct {
 	ConfigFilePath string `long:"config" short:"c" description:"path to config file" required:"true"`
 }
 
-type ConfigFile struct {
-	ProductProperties map[string]*ConfigFileProperty `json:"product-properties"`
-}
-
-type ConfigFileProperty struct {
-	Type  string      `json:"type"`
-	Value interface{} `json:"value"`
-}
-
 type TileProperty struct {
 	Name            string      `json:"name"`
 	Type            string      `json:"type"`
@@ -62,7 +53,7 @@ func stringInSlice(a string, list []string) bool {
 	return false
 }
 
-func checkTileProperties(checkForRequiredProperties bool, propertyPrefix string, configValues map[string]*ConfigFileProperty, tileProperties []TileProperty) ([]string, []error) {
+func checkTileProperties(checkForRequiredProperties bool, propertyPrefix string, configValues map[string]*tileinspect.ConfigFileProperty, tileProperties []TileProperty) ([]string, []error) {
 	var errs []error
 	var validKeys []string
 
@@ -130,7 +121,7 @@ func checkTileProperties(checkForRequiredProperties bool, propertyPrefix string,
 	return validKeys, errs
 }
 
-func (cmd *Config) CompareProperties(configFile *ConfigFile, tileProperties *TileProperties) []error {
+func (cmd *Config) CompareProperties(configFile *tileinspect.ConfigFile, tileProperties *TileProperties) []error {
 	prefix := ".properties"
 	validKeys, errs := checkTileProperties(true, prefix, configFile.ProductProperties, tileProperties.PropertyBlueprints)
 
@@ -151,7 +142,7 @@ func (cmd *Config) CheckConfig(out io.Writer) error {
 		return Wrapf(err, "failed to read the config file: %s", cmd.ConfigFilePath)
 	}
 
-	configFile := &ConfigFile{}
+	configFile := &tileinspect.ConfigFile{}
 	err = yaml.Unmarshal(configFileContents, configFile)
 	if err != nil {
 		return Wrap(err, "the config file does not contain valid JSON or YAML")

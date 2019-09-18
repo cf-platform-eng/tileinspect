@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/cf-platform-eng/tileinspect"
 	"github.com/cf-platform-eng/tileinspect/checkconfig"
 	"github.com/cf-platform-eng/tileinspect/checkconfig/checkconfigfakes"
 	"github.com/ghodss/yaml"
@@ -88,7 +89,7 @@ var _ = Describe("CheckConfig", func() {
 		It("returns an error", func() {
 			err := cmd.CheckConfig(buffer)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("the config file does not contain valid JSON or YAML: error unmarshaling JSON: json: cannot unmarshal string into Go value of type checkconfig.ConfigFile"))
+			Expect(err.Error()).To(Equal("the config file does not contain valid JSON or YAML: error unmarshaling JSON: json: cannot unmarshal string into Go value of type tileinspect.ConfigFile"))
 		})
 	})
 
@@ -237,7 +238,7 @@ var _ = Describe("CheckConfig", func() {
 var _ = Describe("CompareProperties", func() {
 	var (
 		checkConfig    *checkconfig.Config
-		configFile     *checkconfig.ConfigFile
+		configFile     *tileinspect.ConfigFile
 		tileProperties *checkconfig.TileProperties
 	)
 
@@ -254,15 +255,15 @@ var _ = Describe("CompareProperties", func() {
 
 		Context("Empty config file", func() {
 			It("should pass", func() {
-				configFile = &checkconfig.ConfigFile{}
+				configFile = &tileinspect.ConfigFile{}
 				errs := checkConfig.CompareProperties(configFile, tileProperties)
 				Expect(errs).To(BeEmpty())
 			})
 		})
 		Context("Non-empty config file", func() {
 			It("should return an error and print the extra config parameters", func() {
-				configFile = &checkconfig.ConfigFile{
-					ProductProperties: map[string]*checkconfig.ConfigFileProperty{
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
 						".properties.my-property": {
 							Type:  "string",
 							Value: "hi",
@@ -308,7 +309,7 @@ var _ = Describe("CompareProperties", func() {
 
 		Context("Empty config file", func() {
 			It("should pass", func() {
-				configFile = &checkconfig.ConfigFile{}
+				configFile = &tileinspect.ConfigFile{}
 				errs := checkConfig.CompareProperties(configFile, tileProperties)
 				Expect(errs).To(BeEmpty())
 			})
@@ -316,8 +317,8 @@ var _ = Describe("CompareProperties", func() {
 
 		Context("Config file has properties that don't start with the right prefix", func() {
 			It("should return an error and print the bad config parameter", func() {
-				configFile = &checkconfig.ConfigFile{
-					ProductProperties: map[string]*checkconfig.ConfigFileProperty{
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
 						"property-one": {
 							Type:  "string",
 							Value: "hi",
@@ -332,8 +333,8 @@ var _ = Describe("CompareProperties", func() {
 
 		Context("Valid config file", func() {
 			It("should pass", func() {
-				configFile = &checkconfig.ConfigFile{
-					ProductProperties: map[string]*checkconfig.ConfigFileProperty{
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
 						".properties.property-one": {
 							Type:  "string",
 							Value: "hi",
@@ -346,8 +347,8 @@ var _ = Describe("CompareProperties", func() {
 		})
 		Context("Config file overrides a non-configurable parameter", func() {
 			It("should return an error and print the bad config parameter", func() {
-				configFile = &checkconfig.ConfigFile{
-					ProductProperties: map[string]*checkconfig.ConfigFileProperty{
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
 						".properties.property-two": {
 							Type:  "string",
 							Value: "hi",
@@ -415,8 +416,8 @@ var _ = Describe("CompareProperties", func() {
 
 		Context("Valid config file", func() {
 			It("should pass", func() {
-				configFile = &checkconfig.ConfigFile{
-					ProductProperties: map[string]*checkconfig.ConfigFileProperty{
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
 						".properties.simple-property": {
 							Type:  "string",
 							Value: "hi",
@@ -438,8 +439,8 @@ var _ = Describe("CompareProperties", func() {
 
 		Context("Config file using multiple selector options", func() {
 			It("raises an error on the extra selected option", func() {
-				configFile = &checkconfig.ConfigFile{
-					ProductProperties: map[string]*checkconfig.ConfigFileProperty{
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
 						".properties.simple-property": {
 							Type:  "string",
 							Value: "hi",
@@ -481,8 +482,8 @@ var _ = Describe("CompareProperties", func() {
 
 		Context("Empty config file", func() {
 			It("raises an error with the missing fields", func() {
-				configFile = &checkconfig.ConfigFile{
-					ProductProperties: map[string]*checkconfig.ConfigFileProperty{},
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{},
 				}
 				errs := checkConfig.CompareProperties(configFile, tileProperties)
 				Expect(errs).To(HaveLen(1))
@@ -521,8 +522,8 @@ var _ = Describe("CompareProperties", func() {
 
 		Context("Empty config file", func() {
 			It("should pass", func() {
-				configFile = &checkconfig.ConfigFile{
-					ProductProperties: map[string]*checkconfig.ConfigFileProperty{},
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{},
 				}
 				errs := checkConfig.CompareProperties(configFile, tileProperties)
 				Expect(errs).To(BeEmpty())
@@ -560,8 +561,8 @@ var _ = Describe("CompareProperties", func() {
 
 		Context("Empty config file", func() {
 			It("raises an error with the missing fields", func() {
-				configFile = &checkconfig.ConfigFile{
-					ProductProperties: map[string]*checkconfig.ConfigFileProperty{},
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{},
 				}
 				errs := checkConfig.CompareProperties(configFile, tileProperties)
 				Expect(errs).To(HaveLen(1))
@@ -571,8 +572,8 @@ var _ = Describe("CompareProperties", func() {
 
 		Context("Config file only has selector", func() {
 			It("raises an error with the missing fields", func() {
-				configFile = &checkconfig.ConfigFile{
-					ProductProperties: map[string]*checkconfig.ConfigFileProperty{
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
 						".properties.selector-property": {
 							Type:  "selector",
 							Value: "Option One",
@@ -587,8 +588,8 @@ var _ = Describe("CompareProperties", func() {
 
 		Context("Config file has all properties", func() {
 			It("should pass", func() {
-				configFile = &checkconfig.ConfigFile{
-					ProductProperties: map[string]*checkconfig.ConfigFileProperty{
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
 						".properties.selector-property": {
 							Type:  "selector",
 							Value: "Option One",
@@ -634,7 +635,7 @@ var _ = Describe("CompareProperties", func() {
 
 		Context("Empty config file", func() {
 			BeforeEach(func() {
-				configFile = &checkconfig.ConfigFile{}
+				configFile = &tileinspect.ConfigFile{}
 			})
 
 			It("should pass", func() {
@@ -646,7 +647,7 @@ var _ = Describe("CompareProperties", func() {
 
 		Context("Empty config file with default", func() {
 			BeforeEach(func() {
-				configFile = &checkconfig.ConfigFile{}
+				configFile = &tileinspect.ConfigFile{}
 				tileProperties.PropertyBlueprints[0].Default = "med"
 			})
 
@@ -658,8 +659,8 @@ var _ = Describe("CompareProperties", func() {
 
 		Context("Config file gives an invalid value", func() {
 			BeforeEach(func() {
-				configFile = &checkconfig.ConfigFile{
-					ProductProperties: map[string]*checkconfig.ConfigFileProperty{
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
 						".properties.flow-rate": {
 							Value: "ludicrous",
 						},
@@ -676,8 +677,8 @@ var _ = Describe("CompareProperties", func() {
 
 		Context("Config file gives a valid value", func() {
 			BeforeEach(func() {
-				configFile = &checkconfig.ConfigFile{
-					ProductProperties: map[string]*checkconfig.ConfigFileProperty{
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
 						".properties.flow-rate": {
 							Value: "high",
 						},
@@ -707,8 +708,8 @@ var _ = Describe("CompareProperties", func() {
 
 		Context("Config file gives an invalid format", func() {
 			BeforeEach(func() {
-				configFile = &checkconfig.ConfigFile{
-					ProductProperties: map[string]*checkconfig.ConfigFileProperty{
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
 						".properties.my-password": {
 							Value: "shhhh",
 						},
@@ -725,10 +726,10 @@ var _ = Describe("CompareProperties", func() {
 
 		Context("Config file gives an invalid value", func() {
 			BeforeEach(func() {
-				configFile = &checkconfig.ConfigFile{
-					ProductProperties: map[string]*checkconfig.ConfigFileProperty{
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
 						".properties.my-password": {
-							Value: map[string]interface{} {
+							Value: map[string]interface{}{
 								"secret": []int{1, 2, 3},
 							},
 						},
@@ -745,10 +746,10 @@ var _ = Describe("CompareProperties", func() {
 
 		Context("Config file gives a valid value", func() {
 			BeforeEach(func() {
-				configFile = &checkconfig.ConfigFile{
-					ProductProperties: map[string]*checkconfig.ConfigFileProperty{
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
 						".properties.my-password": {
-							Value: map[string]interface{} {
+							Value: map[string]interface{}{
 								"secret": "shhhh",
 							},
 						},

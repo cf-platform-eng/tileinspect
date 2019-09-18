@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/cf-platform-eng/tileinspect/checkconfig"
+	"github.com/cf-platform-eng/tileinspect/makeconfig"
 
 	"github.com/cf-platform-eng/tileinspect/stemcell"
 	"github.com/jessevdk/go-flags"
@@ -15,6 +16,7 @@ import (
 )
 
 var checkConfigOpts checkconfig.Config
+var makeConfigOpts makeconfig.Config
 var metadataOpts metadata.Config
 var stemcellOpts stemcell.Config
 var config tileinspect.Config
@@ -29,6 +31,17 @@ func main() {
 	)
 	if err != nil {
 		fmt.Println("Could not add check-config command")
+		os.Exit(1)
+	}
+
+	_, err = parser.AddCommand(
+		"make-config",
+		"Make a template config file",
+		"Make a template config file based on the property blueprints of this tile",
+		&makeConfigOpts,
+	)
+	if err != nil {
+		fmt.Println("Could not add make-config command")
 		os.Exit(1)
 	}
 

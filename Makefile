@@ -56,7 +56,10 @@ build-image: build/tileinspect-linux
 	docker build --tag cfplatformeng/tileinspect:${VERSION} --file Dockerfile .
 
 test: deps lint
-	ginkgo -r .
+	ginkgo -skipPackage features -r .
+
+test-features: deps lint
+	ginkgo -tags feature -r features
 
 lint: deps-goimports
 	git ls-files | grep '.go$$' | xargs goimports -l -w
