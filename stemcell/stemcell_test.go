@@ -5,7 +5,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/cf-platform-eng/tileinspect/stemcell"
-	"github.com/cf-platform-eng/tileinspect/stemcell/stemcellfakes"
+	"github.com/cf-platform-eng/tileinspect/tileinspectfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gbytes"
@@ -16,12 +16,12 @@ var _ = Describe("WriteStemcell", func() {
 	Context("Valid tile", func() {
 		var (
 			buffer      *Buffer
-			metadataCmd *stemcellfakes.FakeMetadataCmd
+			metadataCmd *tileinspectfakes.FakeMetadataCmd
 		)
 
 		BeforeEach(func() {
 			buffer = NewBuffer()
-			metadataCmd = &stemcellfakes.FakeMetadataCmd{}
+			metadataCmd = &tileinspectfakes.FakeMetadataCmd{}
 		})
 
 		AfterEach(func() {

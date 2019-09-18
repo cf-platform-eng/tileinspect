@@ -3,7 +3,7 @@ package makeconfig_test
 import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/cf-platform-eng/tileinspect/makeconfig"
-	"github.com/cf-platform-eng/tileinspect/makeconfig/makeconfigfakes"
+	"github.com/cf-platform-eng/tileinspect/tileinspectfakes"
 	"github.com/ghodss/yaml"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -12,11 +12,11 @@ import (
 var _ = Describe("MakeConfig", func() {
 	var (
 		cmd         *makeconfig.Config
-		metadataCmd *makeconfigfakes.FakeMetadataCmd
+		metadataCmd *tileinspectfakes.FakeMetadataCmd
 	)
 
 	BeforeEach(func() {
-		metadataCmd = &makeconfigfakes.FakeMetadataCmd{}
+		metadataCmd = &tileinspectfakes.FakeMetadataCmd{}
 		cmd = &makeconfig.Config{
 			MetadataCmd: metadataCmd,
 		}

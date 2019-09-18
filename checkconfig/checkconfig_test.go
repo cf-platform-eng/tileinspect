@@ -7,7 +7,7 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/cf-platform-eng/tileinspect"
 	"github.com/cf-platform-eng/tileinspect/checkconfig"
-	"github.com/cf-platform-eng/tileinspect/checkconfig/checkconfigfakes"
+	"github.com/cf-platform-eng/tileinspect/tileinspectfakes"
 	"github.com/ghodss/yaml"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -30,12 +30,12 @@ var _ = Describe("CheckConfig", func() {
 		buffer      *Buffer
 		cmd         *checkconfig.Config
 		configFile  *os.File
-		metadataCmd *checkconfigfakes.FakeMetadataCmd
+		metadataCmd *tileinspectfakes.FakeMetadataCmd
 	)
 
 	BeforeEach(func() {
 		buffer = NewBuffer()
-		metadataCmd = &checkconfigfakes.FakeMetadataCmd{}
+		metadataCmd = &tileinspectfakes.FakeMetadataCmd{}
 		cmd = &checkconfig.Config{
 			MetadataCmd: metadataCmd,
 		}
@@ -239,7 +239,7 @@ var _ = Describe("CompareProperties", func() {
 	var (
 		checkConfig    *checkconfig.Config
 		configFile     *tileinspect.ConfigFile
-		tileProperties *checkconfig.TileProperties
+		tileProperties *tileinspect.TileProperties
 	)
 
 	BeforeEach(func() {
@@ -248,8 +248,8 @@ var _ = Describe("CompareProperties", func() {
 
 	Context("Tile with no properties", func() {
 		BeforeEach(func() {
-			tileProperties = &checkconfig.TileProperties{
-				PropertyBlueprints: []checkconfig.TileProperty{},
+			tileProperties = &tileinspect.TileProperties{
+				PropertyBlueprints: []tileinspect.TileProperty{},
 			}
 		})
 
@@ -279,8 +279,8 @@ var _ = Describe("CompareProperties", func() {
 
 	Context("Tile with only simple properties with defaults", func() {
 		BeforeEach(func() {
-			tileProperties = &checkconfig.TileProperties{
-				PropertyBlueprints: []checkconfig.TileProperty{
+			tileProperties = &tileinspect.TileProperties{
+				PropertyBlueprints: []tileinspect.TileProperty{
 					{
 						Name:         "property-one",
 						Type:         "string",
@@ -369,8 +369,8 @@ var _ = Describe("CompareProperties", func() {
 
 	Context("Tile with a selector property", func() {
 		BeforeEach(func() {
-			tileProperties = &checkconfig.TileProperties{
-				PropertyBlueprints: []checkconfig.TileProperty{
+			tileProperties = &tileinspect.TileProperties{
+				PropertyBlueprints: []tileinspect.TileProperty{
 					{
 						Name:         "simple-property",
 						Type:         "string",
@@ -380,11 +380,11 @@ var _ = Describe("CompareProperties", func() {
 						Name:         "selector-property",
 						Type:         "selector",
 						Configurable: true,
-						ChildProperties: []checkconfig.TileProperties{
+						ChildProperties: []tileinspect.TileProperties{
 							{
 								Name:        "option-one",
 								SelectValue: "Option One",
-								PropertyBlueprints: []checkconfig.TileProperty{
+								PropertyBlueprints: []tileinspect.TileProperty{
 									{
 										Name:         "option-one-property-one",
 										Type:         "string",
@@ -400,7 +400,7 @@ var _ = Describe("CompareProperties", func() {
 							{
 								Name:        "option-two",
 								SelectValue: "Option Two",
-								PropertyBlueprints: []checkconfig.TileProperty{
+								PropertyBlueprints: []tileinspect.TileProperty{
 									{
 										Name:         "option-two-property-one",
 										Type:         "boolean",
@@ -468,8 +468,8 @@ var _ = Describe("CompareProperties", func() {
 
 	Context("Tile with required properties", func() {
 		BeforeEach(func() {
-			tileProperties = &checkconfig.TileProperties{
-				PropertyBlueprints: []checkconfig.TileProperty{
+			tileProperties = &tileinspect.TileProperties{
+				PropertyBlueprints: []tileinspect.TileProperty{
 					{
 						Name:         "simple-property",
 						Type:         "string",
@@ -494,18 +494,18 @@ var _ = Describe("CompareProperties", func() {
 
 	Context("Tile with required properties inside a selector", func() {
 		BeforeEach(func() {
-			tileProperties = &checkconfig.TileProperties{
-				PropertyBlueprints: []checkconfig.TileProperty{
+			tileProperties = &tileinspect.TileProperties{
+				PropertyBlueprints: []tileinspect.TileProperty{
 					{
 						Name:         "selector-property",
 						Type:         "selector",
 						Configurable: true,
 						Optional:     true,
-						ChildProperties: []checkconfig.TileProperties{
+						ChildProperties: []tileinspect.TileProperties{
 							{
 								Name:        "option-one",
 								SelectValue: "Option One",
-								PropertyBlueprints: []checkconfig.TileProperty{
+								PropertyBlueprints: []tileinspect.TileProperty{
 									{
 										Name:         "option-one-property-one",
 										Type:         "string",
@@ -533,18 +533,18 @@ var _ = Describe("CompareProperties", func() {
 
 	Context("Tile with required properties inside a non-optional selector", func() {
 		BeforeEach(func() {
-			tileProperties = &checkconfig.TileProperties{
-				PropertyBlueprints: []checkconfig.TileProperty{
+			tileProperties = &tileinspect.TileProperties{
+				PropertyBlueprints: []tileinspect.TileProperty{
 					{
 						Name:         "selector-property",
 						Type:         "selector",
 						Configurable: true,
 						Optional:     false,
-						ChildProperties: []checkconfig.TileProperties{
+						ChildProperties: []tileinspect.TileProperties{
 							{
 								Name:        "option-one",
 								SelectValue: "Option One",
-								PropertyBlueprints: []checkconfig.TileProperty{
+								PropertyBlueprints: []tileinspect.TileProperty{
 									{
 										Name:         "option-one-property-one",
 										Type:         "string",
@@ -608,13 +608,13 @@ var _ = Describe("CompareProperties", func() {
 
 	Context("Tile with dropdown_select property", func() {
 		BeforeEach(func() {
-			tileProperties = &checkconfig.TileProperties{
-				PropertyBlueprints: []checkconfig.TileProperty{
+			tileProperties = &tileinspect.TileProperties{
+				PropertyBlueprints: []tileinspect.TileProperty{
 					{
 						Name:         "flow-rate",
 						Type:         "dropdown_select",
 						Configurable: true,
-						Options: []checkconfig.Option{
+						Options: []tileinspect.Option{
 							{
 								Name:  "low",
 								Label: "Low",
@@ -695,8 +695,8 @@ var _ = Describe("CompareProperties", func() {
 
 	Context("Tile with secret property", func() {
 		BeforeEach(func() {
-			tileProperties = &checkconfig.TileProperties{
-				PropertyBlueprints: []checkconfig.TileProperty{
+			tileProperties = &tileinspect.TileProperties{
+				PropertyBlueprints: []tileinspect.TileProperty{
 					{
 						Name:         "my-password",
 						Type:         "secret",

@@ -10,34 +10,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-//go:generate counterfeiter MetadataCmd
-type MetadataCmd interface {
-	LoadMetadata(target interface{}) error
-}
-
 type Config struct {
 	tileinspect.TileConfig
 	Format      string `long:"format" short:"f" description:"output file type" choice:"yaml" choice:"json" default:"yaml"`
-	MetadataCmd MetadataCmd
-}
-
-type TileProperty struct {
-	Name            string      `json:"name"`
-	Type            string      `json:"type"`
-	Configurable    bool        `json:"configurable"`
-	Default         interface{} `json:"default"`
-	Optional        bool        `json:"optional"`
-	Options         []Option
-	ChildProperties []TileProperties `json:"option_templates"`
-}
-type TileProperties struct {
-	Name               string         `json:"name"`
-	PropertyBlueprints []TileProperty `json:"property_blueprints"`
-	SelectValue        string         `json:"select_value"`
-}
-type Option struct {
-	Name  string `json:"name"`
-	Label string `json:"label"`
+	MetadataCmd tileinspect.MetadataCmd
 }
 
 var SampleValues = map[string]interface{}{
@@ -53,7 +29,7 @@ var SampleValues = map[string]interface{}{
 	"vm_type_dropdown": "{vm_type}",
 }
 
-func configForProperties(propertyPrefix string, tileProperties []TileProperty) (*tileinspect.ConfigFile, error) {
+func configForProperties(propertyPrefix string, tileProperties []tileinspect.TileProperty) (*tileinspect.ConfigFile, error) {
 	config := &tileinspect.ConfigFile{
 		ProductProperties: make(map[string]*tileinspect.ConfigFileProperty),
 	}
@@ -106,7 +82,7 @@ func configForProperties(propertyPrefix string, tileProperties []TileProperty) (
 }
 
 func (cmd *Config) MakeConfig() (*tileinspect.ConfigFile, error) {
-	tileProperties := &TileProperties{}
+	tileProperties := &tileinspect.TileProperties{}
 	err := cmd.MetadataCmd.LoadMetadata(tileProperties)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to load metadata from the tile")

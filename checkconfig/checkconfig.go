@@ -14,34 +14,10 @@ import (
 	. "github.com/pkg/errors"
 )
 
-//go:generate counterfeiter MetadataCmd
-type MetadataCmd interface {
-	LoadMetadata(target interface{}) error
-}
-
 type Config struct {
 	tileinspect.TileConfig
-	MetadataCmd    MetadataCmd
+	MetadataCmd    tileinspect.MetadataCmd
 	ConfigFilePath string `long:"config" short:"c" description:"path to config file" required:"true"`
-}
-
-type TileProperty struct {
-	Name            string      `json:"name"`
-	Type            string      `json:"type"`
-	Configurable    bool        `json:"configurable"`
-	Default         interface{} `json:"default"`
-	Optional        bool        `json:"optional"`
-	Options         []Option
-	ChildProperties []TileProperties `json:"option_templates"`
-}
-type TileProperties struct {
-	Name               string         `json:"name"`
-	PropertyBlueprints []TileProperty `json:"property_blueprints"`
-	SelectValue        string         `json:"select_value"`
-}
-type Option struct {
-	Name  string `json:"name"`
-	Label string `json:"label"`
 }
 
 func stringInSlice(a string, list []string) bool {
@@ -53,7 +29,7 @@ func stringInSlice(a string, list []string) bool {
 	return false
 }
 
-func checkTileProperties(checkForRequiredProperties bool, propertyPrefix string, configValues map[string]*tileinspect.ConfigFileProperty, tileProperties []TileProperty) ([]string, []error) {
+func checkTileProperties(checkForRequiredProperties bool, propertyPrefix string, configValues map[string]*tileinspect.ConfigFileProperty, tileProperties []tileinspect.TileProperty) ([]string, []error) {
 	var errs []error
 	var validKeys []string
 
@@ -121,7 +97,7 @@ func checkTileProperties(checkForRequiredProperties bool, propertyPrefix string,
 	return validKeys, errs
 }
 
-func (cmd *Config) CompareProperties(configFile *tileinspect.ConfigFile, tileProperties *TileProperties) []error {
+func (cmd *Config) CompareProperties(configFile *tileinspect.ConfigFile, tileProperties *tileinspect.TileProperties) []error {
 	prefix := ".properties"
 	validKeys, errs := checkTileProperties(true, prefix, configFile.ProductProperties, tileProperties.PropertyBlueprints)
 
@@ -152,7 +128,7 @@ func (cmd *Config) CheckConfig(out io.Writer) error {
 		return errors.New(`the config file is missing a "product-properties" section`)
 	}
 
-	tileProperties := &TileProperties{}
+	tileProperties := &tileinspect.TileProperties{}
 	err = cmd.MetadataCmd.LoadMetadata(tileProperties)
 	if err != nil {
 		return Wrap(err, "failed to load metadata from the tile")

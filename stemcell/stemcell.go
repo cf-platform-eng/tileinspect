@@ -12,22 +12,13 @@ import (
 	. "github.com/pkg/errors"
 )
 
-//go:generate counterfeiter MetadataCmd
-type MetadataCmd interface {
-	LoadMetadata(target interface{}) error
-}
-
 type Config struct {
 	tileinspect.TileConfig
-	MetadataCmd MetadataCmd
-}
-
-type TileMetadata struct {
-	StemcellCriteria map[string]interface{} `json:"stemcell_criteria"`
+	MetadataCmd tileinspect.MetadataCmd
 }
 
 func (cmd *Config) WriteStemcell(out io.Writer) error {
-	var tileMetadata TileMetadata
+	tileMetadata := &tileinspect.TileProperties{}
 	err := cmd.MetadataCmd.LoadMetadata(&tileMetadata)
 	if err != nil {
 		return Wrap(err, "failed to load tile metadata")
