@@ -1,0 +1,11 @@
+---
+platform: linux
+
+inputs:
+  - name: source
+
+run:
+  path: make
+  dir: source
+  args:
+    - test-features
