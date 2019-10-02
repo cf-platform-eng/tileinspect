@@ -22,6 +22,27 @@ var _ = Describe("MakeConfig", func() {
 		}
 	})
 
+	Describe("product name", func() {
+		BeforeEach(func() {
+			metadataCmd.LoadMetadataStub = func(target interface{}) error {
+				err := yaml.Unmarshal([]byte(heredoc.Doc(`
+			---
+			name: product
+			property_blueprints:
+            `)), &target)
+				Expect(err).ToNot(HaveOccurred())
+				return nil
+			}
+		})
+
+		It("returns the product name", func() {
+			config, err := cmd.MakeConfig()
+			Expect(err).ToNot(HaveOccurred())
+			Expect(config).ToNot(BeNil())
+			Expect(config.ProductName).To(Equal("product"))
+		})
+	})
+
 	Describe("string properties", func() {
 		BeforeEach(func() {
 			metadataCmd.LoadMetadataStub = func(target interface{}) error {

@@ -54,7 +54,6 @@ var _ = Describe("tileinspect make-config", func() {
 		steps.And("the config file uses the option for the selector that I gave on the cli")
 	})
 
-
 	steps.Define(func(define Definitions) {
 		var (
 			tile       *os.File
@@ -89,6 +88,7 @@ var _ = Describe("tileinspect make-config", func() {
 		define.Then(`^the config file contains sample values for the properties$`, func() {
 			Expect(configFile).ToNot(BeNil())
 			Expect(configFile.ProductProperties).ToNot(BeNil())
+			Expect(configFile.ProductName).To(Equal(("feature-test-tile")))
 			Expect(configFile.ProductProperties).To(HaveKey(".properties.simple-string"))
 			Expect(configFile.ProductProperties[".properties.simple-string"].Value).To(Equal("SAMPLE_STRING_VALUE"))
 			Expect(configFile.ProductProperties).To(HaveKey(".properties.simple-integer"))

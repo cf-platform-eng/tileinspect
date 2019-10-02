@@ -88,6 +88,7 @@ func (cmd *Config) MakeConfig() (*tileinspect.ConfigFile, error) {
 	}
 
 	config := &tileinspect.ConfigFile{
+		ProductName:       tileProperties.Name,
 		ProductProperties: make(map[string]*tileinspect.ConfigFileProperty),
 	}
 

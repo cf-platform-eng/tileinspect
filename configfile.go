@@ -1,6 +1,7 @@
 package tileinspect
 
 type ConfigFile struct {
+	ProductName       string                         `json:"product-name"`
 	ProductProperties map[string]*ConfigFileProperty `json:"product-properties"`
 }
 
