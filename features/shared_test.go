@@ -29,3 +29,18 @@ func MakeTileWithMetadata(metadata string) (*os.File, error) {
 	err = writer.Close()
 	return file, err
 }
+
+func MakeConfigFile(data string) (*os.File, error) {
+	file, err := ioutil.TempFile("", "config")
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = file.Write([]byte(data))
+	if err != nil {
+		return nil, err
+	}
+	file.Close()
+
+	return file, err
+}

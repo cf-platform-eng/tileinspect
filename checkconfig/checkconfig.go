@@ -42,6 +42,19 @@ func checkTileProperties(checkForRequiredProperties bool, propertyPrefix string,
 			errs = append(errs, fmt.Errorf("the config file contains a property (%s) that is not configurable", propertyKey))
 		}
 
+		if property.Type == "secret" && hasValue {
+			var value map[string]interface{}
+			var ok bool
+			var secret string
+			if value, ok = configValues[propertyKey].Value.(map[string]interface{}); !ok {
+				errs = append(errs, fmt.Errorf("the config file value for property (%s) is not in the right format. Should be {\"secret\": \"<SECRET VALUE>\"}", propertyKey))
+			} else if secret, ok = value["secret"].(string); !ok {
+				errs = append(errs, fmt.Errorf("the config file value for property (%s) is not in the right format. Should be {\"secret\": \"<SECRET VALUE>\"}", propertyKey))
+			} else if secret == "" {
+				hasValue = false
+			}
+		}
+
 		if checkForRequiredProperties {
 			if property.Configurable && !property.Optional {
 				if property.Default == nil && property.Type != "dropdown_select" {
@@ -80,16 +93,6 @@ func checkTileProperties(checkForRequiredProperties bool, propertyPrefix string,
 			}
 			if !validValue {
 				errs = append(errs, fmt.Errorf("the config file value for property (%s) is invalid: %s", propertyKey, configValues[propertyKey].Value))
-			}
-		}
-
-		if property.Type == "secret" && hasValue {
-			var value map[string]interface{}
-			var ok bool
-			if value, ok = configValues[propertyKey].Value.(map[string]interface{}); !ok {
-				errs = append(errs, fmt.Errorf("the config file value for property (%s) is not in the right format. Should be {\"secret\": \"<SECRET VALUE>\"}", propertyKey))
-			} else if secret, ok := value["secret"].(string); !ok || secret == "" {
-				errs = append(errs, fmt.Errorf("the config file value for property (%s) is not in the right format. Should be {\"secret\": \"<SECRET VALUE>\"}", propertyKey))
 			}
 		}
 	}

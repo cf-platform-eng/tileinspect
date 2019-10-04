@@ -744,6 +744,47 @@ var _ = Describe("CompareProperties", func() {
 			})
 		})
 
+		Context("Config file gives an empty secret", func() {
+			BeforeEach(func() {
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
+						".properties.my-password": {
+							Value: map[string]interface{}{
+								"secret": "",
+							},
+						},
+					},
+				}
+			})
+
+			It("should error with the missing value", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(1))
+				Expect(errs[0].Error()).To(ContainSubstring("the config file is missing a required property (.properties.my-password)"))
+			})
+
+		})
+
+		Context("Config file gives an empty secret, when it is optional", func() {
+			BeforeEach(func() {
+				tileProperties.PropertyBlueprints[0].Optional = true
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
+						".properties.my-password": {
+							Value: map[string]interface{}{
+								"secret": "",
+							},
+						},
+					},
+				}
+			})
+
+			It("should pass", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(BeEmpty())
+			})
+		})
+
 		Context("Config file gives a valid value", func() {
 			BeforeEach(func() {
 				configFile = &tileinspect.ConfigFile{
