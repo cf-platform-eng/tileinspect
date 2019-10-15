@@ -23,6 +23,6 @@ type TileProperties struct {
 }
 
 type Option struct {
-	Name  string `json:"name"`
-	Label string `json:"label"`
+	Name  interface{} `json:"name"`
+	Label interface{} `json:"label"`
 }

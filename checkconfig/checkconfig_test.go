@@ -691,6 +691,52 @@ var _ = Describe("CompareProperties", func() {
 				Expect(errs).To(BeEmpty())
 			})
 		})
+
+		Context("Values are integers", func() {
+			BeforeEach(func() {
+				tileProperties = &tileinspect.TileProperties{
+					PropertyBlueprints: []tileinspect.TileProperty{
+						{
+							Name:         "quantity",
+							Type:         "dropdown_select",
+							Configurable: true,
+							Optional:     false,
+							Options: []tileinspect.Option{
+								{
+									Name:  0,
+									Label: 0,
+								},
+								{
+									Name:  1,
+									Label: 1,
+								},
+								{
+									Name:  2,
+									Label: 2,
+								},
+							},
+						},
+					},
+				}
+			})
+
+			Context("Config file gives a valid value", func() {
+				BeforeEach(func() {
+					configFile = &tileinspect.ConfigFile{
+						ProductProperties: map[string]*tileinspect.ConfigFileProperty{
+							".properties.quantity": {
+								Value: 1,
+							},
+						},
+					}
+				})
+
+				It("should pass", func() {
+					errs := checkConfig.CompareProperties(configFile, tileProperties)
+					Expect(errs).To(BeEmpty())
+				})
+			})
+		})
 	})
 
 	Context("Tile with secret property", func() {

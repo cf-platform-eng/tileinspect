@@ -61,6 +61,29 @@ var _ = Describe("tileinspect check-config", func() {
 		})
 	})
 
+	Describe("Dropdown Select", func() {
+		Scenario("Valid string values", func() {
+			steps.Given("I have a tile with a dropdown_select property")
+			steps.And("I have a config file with a valid dropdown_select value")
+			steps.When("I run tileinspect check-config")
+			steps.Then("it says the config file is valid")
+		})
+
+		Scenario("Invalid string values", func() {
+			steps.Given("I have a tile with a dropdown_select property")
+			steps.And("I have a config file with an invalid dropdown_select value")
+			steps.When("I run tileinspect check-config")
+			steps.Then("it says the dropdown_select value is invalid")
+		})
+
+		Scenario("Numeric values", func() {
+			steps.Given("I have a tile with a numeric dropdown_select property")
+			steps.And("I have a config file with a numeric dropdown_select value")
+			steps.When("I run tileinspect check-config")
+			steps.Then("it says the config file is valid")
+		})
+	})
+
 	steps.Define(func(define Definitions) {
 		var (
 			tile       *os.File
@@ -144,6 +167,88 @@ var _ = Describe("tileinspect check-config", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
+		define.Given(`^I have a tile with a dropdown_select property$`, func() {
+			var err error
+			tile, err = features.MakeTileWithMetadata(heredoc.Doc(`
+			---
+			name: feature-test-tile
+			property_blueprints:
+			  - name: my-dropdown
+			    configurable: true
+			    type: dropdown_select
+			    optional: false
+			    options:
+			      - label: Low
+			        name: low
+			      - label: Medium
+			        name: medium
+			      - label: High
+			        name: high
+			`))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		define.Given(`^I have a tile with a numeric dropdown_select property$`, func() {
+			var err error
+			tile, err = features.MakeTileWithMetadata(heredoc.Doc(`
+			---
+			name: feature-test-tile
+			property_blueprints:
+			  - name: my-numeric-dropdown
+			    configurable: true
+			    type: dropdown_select
+			    optional: false
+			    options:
+			      - label: 1
+			        name: 1
+			      - label: 2
+			        name: 2
+			`))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		define.Given(`^I have a config file with a valid dropdown_select value$`, func() {
+			var err error
+			configFile, err = features.MakeConfigFile(heredoc.Doc(`
+			{
+			  "product-properties": {
+			    ".properties.my-dropdown": {
+			      "value": "medium"
+			    }
+			  }
+			}
+			`))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		define.Given(`^I have a config file with an invalid dropdown_select value$`, func() {
+			var err error
+			configFile, err = features.MakeConfigFile(heredoc.Doc(`
+			{
+			  "product-properties": {
+			    ".properties.my-dropdown": {
+			      "value": "this is not a valid value"
+			    }
+			  }
+			}
+			`))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		define.Given(`^I have a config file with a numeric dropdown_select value$`, func() {
+			var err error
+			configFile, err = features.MakeConfigFile(heredoc.Doc(`
+			{
+			  "product-properties": {
+			    ".properties.my-numeric-dropdown": {
+			      "value": 2
+			    }
+			  }
+			}
+			`))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
 		define.When(`^I run tileinspect check-config$`, func() {
 			cmd = exec.Command("go", "run", "../cmd/tileinspect/main.go", "check-config", "-c", configFile.Name(), "-t", tile.Name())
 			var outputBytes []byte
@@ -163,6 +268,11 @@ var _ = Describe("tileinspect check-config", func() {
 
 		define.Then(`^it says that the secret is invalid$`, func() {
 			Expect(output).To(ContainSubstring(`the config file value for property (.properties.my-secret) is not in the right format. Should be {"secret": "<SECRET VALUE>"}`))
+			Expect(exitError).To(HaveOccurred())
+		})
+
+		define.Then(`^it says the dropdown_select value is invalid$`, func() {
+			Expect(output).To(ContainSubstring(`the config file value for property (.properties.my-dropdown) is invalid: this is not a valid value`))
 			Expect(exitError).To(HaveOccurred())
 		})
 	})

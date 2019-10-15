@@ -92,7 +92,7 @@ func checkTileProperties(checkForRequiredProperties bool, propertyPrefix string,
 				}
 			}
 			if !validValue {
-				errs = append(errs, fmt.Errorf("the config file value for property (%s) is invalid: %s", propertyKey, configValues[propertyKey].Value))
+				errs = append(errs, fmt.Errorf("the config file value for property (%s) is invalid: %v", propertyKey, configValues[propertyKey].Value))
 			}
 		}
 	}
