@@ -84,6 +84,21 @@ var _ = Describe("tileinspect check-config", func() {
 		})
 	})
 
+	Describe("Collection", func() {
+		Scenario("Valid collection in config", func() {
+			steps.Given("I have a tile file with a collection property")
+			steps.And("I have a config with matching collection")
+			steps.When("I run tileinspect check-config")
+			steps.Then("it says the config file is valid")
+		})
+		Scenario("Missing collection", func() {
+			steps.Given("I have a tile file with a collection property")
+			steps.And("I have a config without collection")
+			steps.When("I run tileinspect check-config")
+			steps.Then("it says the config file missing collection")
+		})
+	})
+
 	steps.Define(func(define Definitions) {
 		var (
 			tile       *os.File
@@ -167,7 +182,18 @@ var _ = Describe("tileinspect check-config", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
+		define.Given(`^I have a config without collection$`, func() {
+			var err error
+			configFile, err = features.MakeConfigFile(heredoc.Doc(`
+			{
+			  "product-properties": {
+			  }
+			}`))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
 		define.Given(`^I have a tile with a dropdown_select property$`, func() {
+
 			var err error
 			tile, err = features.MakeTileWithMetadata(heredoc.Doc(`
 			---
@@ -203,6 +229,28 @@ var _ = Describe("tileinspect check-config", func() {
 			        name: 1
 			      - label: 2
 			        name: 2
+			`))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		define.Given(`^I have a tile file with a collection property$`, func() {
+			var err error
+			tile, err = features.MakeTileWithMetadata(heredoc.Doc(`
+			---
+			name: feature-test-tile
+			property_blueprints:
+			  - name: my-collection
+			    configurable: true
+			    type: collection
+			    optional: false
+			    property_blueprints:
+			      - name: property-1
+			        optional: false
+			        type: string
+			        configurabe: true
+			      - name: property-2
+			        optional: false
+			        type: string
 			`))
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -249,6 +297,29 @@ var _ = Describe("tileinspect check-config", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
+		define.Given(`^I have a config with matching collection$`, func() {
+			var err error
+			configFile, err = features.MakeConfigFile(heredoc.Doc(`
+			{
+			  "product-properties": {
+			    ".properties.my-collection": {
+			      "value": [
+			        { 
+						"name": "property-1",
+						"value": "value-1"
+					},
+					{
+						  "name": "property-2",
+						  "value": "value-1"
+					}
+				  ]
+			    }
+			  }
+			}
+			`))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
 		define.When(`^I run tileinspect check-config$`, func() {
 			cmd = exec.Command("go", "run", "../cmd/tileinspect/main.go", "check-config", "-c", configFile.Name(), "-t", tile.Name())
 			var outputBytes []byte
@@ -273,6 +344,16 @@ var _ = Describe("tileinspect check-config", func() {
 
 		define.Then(`^it says the dropdown_select value is invalid$`, func() {
 			Expect(output).To(ContainSubstring(`the config file value for property (.properties.my-dropdown) is invalid: this is not a valid value`))
+			Expect(exitError).To(HaveOccurred())
+		})
+
+		define.Then(`^it says the config is invalid$`, func() {
+			Expect(output).To(ContainSubstring(`the config file value for property (.properties.my-dropdown) is invalid: this is not a valid value`))
+			Expect(exitError).To(HaveOccurred())
+		})
+
+		define.Then(`^it says the config file missing collection$`, func() {
+			Expect(output).To(ContainSubstring(`the config file is missing a required property (.properties.my-collection)`))
 			Expect(exitError).To(HaveOccurred())
 		})
 	})
