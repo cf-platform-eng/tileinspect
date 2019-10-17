@@ -97,6 +97,12 @@ var _ = Describe("tileinspect check-config", func() {
 			steps.When("I run tileinspect check-config")
 			steps.Then("it says the config file missing collection")
 		})
+		Scenario("Non-configurable collection items", func() {
+			steps.Given("I have a tile file with a collection property")
+			steps.And("I have a config with a collection with non-configurable value")
+			steps.When("I run tileinspect check-config")
+			steps.Then("it says the config file configures unconfigurable collection item")
+		})
 	})
 
 	steps.Define(func(define Definitions) {
@@ -122,28 +128,28 @@ var _ = Describe("tileinspect check-config", func() {
 		define.Given(`^I have a tile with a required secret property$`, func() {
 			var err error
 			tile, err = features.MakeTileWithMetadata(heredoc.Doc(`
-			---
-			name: feature-test-tile
-			property_blueprints:
-			  - name: my-secret
-			    configurable: true
-			    type: secret
-			    optional: false
-			`))
+            ---
+            name: feature-test-tile
+            property_blueprints:
+              - name: my-secret
+                configurable: true
+                type: secret
+                optional: false
+            `))
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		define.Given(`^I have a tile with an optional secret property$`, func() {
 			var err error
 			tile, err = features.MakeTileWithMetadata(heredoc.Doc(`
-			---
-			name: feature-test-tile
-			property_blueprints:
-			  - name: my-secret
-			    configurable: true
-			    type: secret
-			    optional: true
-			`))
+            ---
+            name: feature-test-tile
+            property_blueprints:
+              - name: my-secret
+                configurable: true
+                type: secret
+                optional: true
+            `))
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -156,39 +162,39 @@ var _ = Describe("tileinspect check-config", func() {
 		define.Given(`^I have a config file with a secret value of "(.*)"$`, func(passwordValue string) {
 			var err error
 			configFile, err = features.MakeConfigFile(fmt.Sprintf(heredoc.Doc(`
-			{
-			  "product-properties": {
-			    ".properties.my-secret": {
-			      "value": {
-			        "secret" : "%s"
-			      }
-			    }
-			  }
-			}
-			`), passwordValue))
+            {
+              "product-properties": {
+                ".properties.my-secret": {
+                  "value": {
+                    "secret" : "%s"
+                  }
+                }
+              }
+            }
+            `), passwordValue))
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		define.Given(`^I have a config file with an invalid secret value$`, func() {
 			var err error
 			configFile, err = features.MakeConfigFile(heredoc.Doc(`
-			{
-			  "product-properties": {
-			    ".properties.my-secret": {
-			      "value": "secret"
-			    }
-			  }
-			}`))
+            {
+              "product-properties": {
+                ".properties.my-secret": {
+                  "value": "secret"
+                }
+              }
+            }`))
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		define.Given(`^I have a config without collection$`, func() {
 			var err error
 			configFile, err = features.MakeConfigFile(heredoc.Doc(`
-			{
-			  "product-properties": {
-			  }
-			}`))
+            {
+              "product-properties": {
+              }
+            }`))
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -196,127 +202,142 @@ var _ = Describe("tileinspect check-config", func() {
 
 			var err error
 			tile, err = features.MakeTileWithMetadata(heredoc.Doc(`
-			---
-			name: feature-test-tile
-			property_blueprints:
-			  - name: my-dropdown
-			    configurable: true
-			    type: dropdown_select
-			    optional: false
-			    options:
-			      - label: Low
-			        name: low
-			      - label: Medium
-			        name: medium
-			      - label: High
-			        name: high
-			`))
+            ---
+            name: feature-test-tile
+            property_blueprints:
+              - name: my-dropdown
+                configurable: true
+                type: dropdown_select
+                optional: false
+                options:
+                  - label: Low
+                    name: low
+                  - label: Medium
+                    name: medium
+                  - label: High
+                    name: high
+            `))
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		define.Given(`^I have a tile with a numeric dropdown_select property$`, func() {
 			var err error
 			tile, err = features.MakeTileWithMetadata(heredoc.Doc(`
-			---
-			name: feature-test-tile
-			property_blueprints:
-			  - name: my-numeric-dropdown
-			    configurable: true
-			    type: dropdown_select
-			    optional: false
-			    options:
-			      - label: 1
-			        name: 1
-			      - label: 2
-			        name: 2
-			`))
+            ---
+            name: feature-test-tile
+            property_blueprints:
+              - name: my-numeric-dropdown
+                configurable: true
+                type: dropdown_select
+                optional: false
+                options:
+                  - label: 1
+                    name: 1
+                  - label: 2
+                    name: 2
+            `))
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		define.Given(`^I have a tile file with a collection property$`, func() {
 			var err error
 			tile, err = features.MakeTileWithMetadata(heredoc.Doc(`
-			---
-			name: feature-test-tile
-			property_blueprints:
-			  - name: my-collection
-			    configurable: true
-			    type: collection
-			    optional: false
-			    property_blueprints:
-			      - name: property-1
-			        optional: false
-			        type: string
-			        configurabe: true
-			      - name: property-2
-			        optional: false
-			        type: string
-			`))
+            ---
+            name: feature-test-tile
+            property_blueprints:
+              - name: my-collection
+                configurable: true
+                type: collection
+                optional: false
+                property_blueprints:
+                  - name: property-1
+                    optional: false
+                    type: string
+                    configurable: true
+                  - name: property-2
+                    optional: false
+                    type: string
+                    configurable: false
+            `))
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		define.Given(`^I have a config file with a valid dropdown_select value$`, func() {
 			var err error
 			configFile, err = features.MakeConfigFile(heredoc.Doc(`
-			{
-			  "product-properties": {
-			    ".properties.my-dropdown": {
-			      "value": "medium"
-			    }
-			  }
-			}
-			`))
+            {
+              "product-properties": {
+                ".properties.my-dropdown": {
+                  "value": "medium"
+                }
+              }
+            }
+            `))
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		define.Given(`^I have a config file with an invalid dropdown_select value$`, func() {
 			var err error
 			configFile, err = features.MakeConfigFile(heredoc.Doc(`
-			{
-			  "product-properties": {
-			    ".properties.my-dropdown": {
-			      "value": "this is not a valid value"
-			    }
-			  }
-			}
-			`))
+            {
+              "product-properties": {
+                ".properties.my-dropdown": {
+                  "value": "this is not a valid value"
+                }
+              }
+            }
+            `))
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		define.Given(`^I have a config file with a numeric dropdown_select value$`, func() {
 			var err error
 			configFile, err = features.MakeConfigFile(heredoc.Doc(`
-			{
-			  "product-properties": {
-			    ".properties.my-numeric-dropdown": {
-			      "value": 2
-			    }
-			  }
-			}
-			`))
+            {
+              "product-properties": {
+                ".properties.my-numeric-dropdown": {
+                  "value": 2
+                }
+              }
+            }
+            `))
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		define.Given(`^I have a config with matching collection$`, func() {
 			var err error
 			configFile, err = features.MakeConfigFile(heredoc.Doc(`
-			{
-			  "product-properties": {
-			    ".properties.my-collection": {
-			      "value": [
-			        { 
-						"name": "property-1",
-						"value": "value-1"
-					},
-					{
-						  "name": "property-2",
-						  "value": "value-1"
-					}
-				  ]
-			    }
-			  }
-			}
-			`))
+            {
+              "product-properties": {
+                ".properties.my-collection": {
+                  "value": [
+                    { 
+                        "property-1": "value-1"
+                    }
+                  ]
+                }
+              }
+            }
+            `))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		define.Given(`^I have a config with a collection with non-configurable value$`, func() {
+			var err error
+			configFile, err = features.MakeConfigFile(heredoc.Doc(`
+            {
+              "product-properties": {
+                ".properties.my-collection": {
+                  "value": [
+                    { 
+                      "property-1", "value-1",
+                      "property-2": "value-2"
+                    }
+                  ]
+                }
+              }
+            }
+            `))
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -354,6 +375,11 @@ var _ = Describe("tileinspect check-config", func() {
 
 		define.Then(`^it says the config file missing collection$`, func() {
 			Expect(output).To(ContainSubstring(`the config file is missing a required property (.properties.my-collection)`))
+			Expect(exitError).To(HaveOccurred())
+		})
+
+		define.Then(`^it says the config file configures unconfigurable collection item$`, func() {
+			Expect(output).To(ContainSubstring(`collection (.properties.my-collection) contains unconfigurable property property-2`))
 			Expect(exitError).To(HaveOccurred())
 		})
 	})

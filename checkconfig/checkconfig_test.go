@@ -850,4 +850,108 @@ var _ = Describe("CompareProperties", func() {
 			})
 		})
 	})
+
+	Context("Tile with a collection", func() {
+		BeforeEach(func() {
+			tileProperties = &tileinspect.TileProperties{
+				PropertyBlueprints: []tileinspect.TileProperty{
+					{
+						Name:         "collection-properties",
+						Type:         "collection",
+						Configurable: true,
+						Optional:     false,
+						PropertyBlueprints: []tileinspect.TileProperty{
+							{
+								Name:         "property1",
+								Type:         "string",
+								Configurable: true,
+								Optional:     false,
+							},
+							{
+								Name:         "property2",
+								Type:         "string",
+								Configurable: false,
+							},
+						},
+					},
+				},
+			}
+		})
+
+		Context("Empty config file", func() {
+			BeforeEach(func() {
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{},
+				}
+			})
+
+			It("raises an error with the missing fields", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(1))
+				Expect(errs[0].Error()).To(ContainSubstring("the config file is missing a required property (.properties.collection-properties)"))
+			})
+		})
+
+		Context("Missing collection item", func() {
+			BeforeEach(func() {
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
+						".properties.collection-properties": {
+							Value: []interface{}{},
+						},
+					},
+				}
+			})
+
+			It("raises an error with the missing item", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(1))
+				Expect(errs[0].Error()).To(ContainSubstring("collection (.properties.collection-properties) is missing required property property1"))
+			})
+		})
+
+		Context("Has valid item", func() {
+			BeforeEach(func() {
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
+						".properties.collection-properties": {
+							Value: []interface{}{
+								map[string]interface{}{
+									"property1": "value1",
+								},
+							},
+						},
+					},
+				}
+			})
+
+			It("success with sufficient values", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(0))
+			})
+		})
+
+		Context("Config includes non-configurabe item", func() {
+			BeforeEach(func() {
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
+						".properties.collection-properties": {
+							Value: []interface{}{
+								map[string]interface{}{
+									"property1": "value1",
+									"property2": "value2",
+								},
+							},
+						},
+					},
+				}
+			})
+
+			It("raises an error with the non-configurable property", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(1))
+				Expect(errs[0].Error()).To(ContainSubstring("collection (.properties.collection-properties) contains unconfigurable property property2"))
+			})
+		})
+	})
 })

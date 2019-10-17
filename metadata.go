@@ -6,13 +6,14 @@ type MetadataCmd interface {
 }
 
 type TileProperty struct {
-	Name            string      `json:"name"`
-	Type            string      `json:"type"`
-	Configurable    bool        `json:"configurable"`
-	Default         interface{} `json:"default"`
-	Optional        bool        `json:"optional"`
-	Options         []Option
-	ChildProperties []TileProperties `json:"option_templates"`
+	Name               string      `json:"name"`
+	Type               string      `json:"type"`
+	Configurable       bool        `json:"configurable"`
+	Default            interface{} `json:"default"`
+	Optional           bool        `json:"optional"`
+	Options            []Option
+	ChildProperties    []TileProperties `json:"option_templates"`
+	PropertyBlueprints []TileProperty   `json:"property_blueprints"`
 }
 
 type TileProperties struct {
