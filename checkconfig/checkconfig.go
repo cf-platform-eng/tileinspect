@@ -29,6 +29,39 @@ func stringInSlice(a string, list []string) bool {
 	return false
 }
 
+func checkCollectionProperties(checkForRequiredProperties bool, propertyPrefix string, configValues *[]interface{}, tileProperties *[]tileinspect.TileProperty) ([]string, []error) {
+	var errs []error
+	var validKeys []string
+
+	if len(*configValues) == 0 {
+		for _, prop := range *tileProperties {
+			if prop.Configurable && !prop.Optional {
+				errs = append(errs, fmt.Errorf("collection (%s) is missing required property %s", propertyPrefix, prop.Name))
+			}
+		}
+	} else {
+		for _, valueInterface := range *configValues {
+			if value, ok := valueInterface.(map[string]interface{}); ok {
+				for _, prop := range *tileProperties {
+					if _, ok := value[prop.Name]; ok {
+						if !prop.Configurable {
+							errs = append(errs, fmt.Errorf("collection (%s) contains unconfigurable property %s", propertyPrefix, prop.Name))
+						}
+					} else {
+						if prop.Configurable && !prop.Optional {
+							errs = append(errs, fmt.Errorf("collection (%s) is missing required property %s", propertyPrefix, prop.Name))
+						}
+					}
+				}
+			} else {
+				errs = append(errs, fmt.Errorf("collection (%s) contains invalid item %v", propertyPrefix, valueInterface))
+			}
+		}
+	}
+
+	return validKeys, errs
+}
+
 func checkTileProperties(checkForRequiredProperties bool, propertyPrefix string, configValues map[string]*tileinspect.ConfigFileProperty, tileProperties []tileinspect.TileProperty) ([]string, []error) {
 	var errs []error
 	var validKeys []string
@@ -93,6 +126,18 @@ func checkTileProperties(checkForRequiredProperties bool, propertyPrefix string,
 			}
 			if !validValue {
 				errs = append(errs, fmt.Errorf("the config file value for property (%s) is invalid: %v", propertyKey, configValues[propertyKey].Value))
+			}
+		}
+
+		if property.Type == "collection" && hasValue {
+			var values []interface{}
+			var ok bool
+			if values, ok = configValues[propertyKey].Value.([]interface{}); ok {
+				childKeys, childErrs := checkCollectionProperties(checkForRequiredProperties, propertyKey, &values, &(property.PropertyBlueprints))
+				validKeys = append(validKeys, childKeys...)
+				errs = append(errs, childErrs...)
+			} else {
+				errs = append(errs, fmt.Errorf("the config file value for the collection blueprints (%s) is not in the right format. Should be [ { \"name\": \"value\", ... }, ... ]", propertyKey))
 			}
 		}
 	}
