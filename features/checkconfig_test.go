@@ -105,6 +105,15 @@ var _ = Describe("tileinspect check-config", func() {
 		})
 	})
 
+	Describe("per job blueprints", func() {
+		Scenario("Valid per job config", func() {
+			steps.Given("I have a tile with a per job properties")
+			steps.And("I have a config with per job values")
+			steps.When("I run tileinspect check-config")
+			steps.Then("it says the config file is valid")
+		})
+	})
+
 	steps.Define(func(define Definitions) {
 		var (
 			tile       *os.File
@@ -262,6 +271,22 @@ var _ = Describe("tileinspect check-config", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
+		define.Given("^I have a tile with a per job properties$", func() {
+			var err error
+			tile, err = features.MakeTileWithMetadata(heredoc.Doc(`
+			---
+			name: feature-test-tile
+			job_types:
+			- name: job_type_1
+			  property_blueprints:
+			  - name: job_1_value1
+			    type: string
+			    optional: false
+			    configurable: true  
+			`))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
 		define.Given(`^I have a config file with a valid dropdown_select value$`, func() {
 			var err error
 			configFile, err = features.MakeConfigFile(heredoc.Doc(`
@@ -338,6 +363,20 @@ var _ = Describe("tileinspect check-config", func() {
               }
             }
             `))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		define.Given(`^I have a config with per job values$`, func() {
+			var err error
+			configFile, err = features.MakeConfigFile(heredoc.Doc(`
+			{
+			  "product-properties": {
+				".job_type_1.job_1_value1": {
+				  "value": "value"
+				}
+			  }
+			}
+			`))
 			Expect(err).ToNot(HaveOccurred())
 		})
 

@@ -149,10 +149,17 @@ func (cmd *Config) CompareProperties(configFile *tileinspect.ConfigFile, tilePro
 	prefix := ".properties"
 	validKeys, errs := checkTileProperties(true, prefix, configFile.ProductProperties, tileProperties.PropertyBlueprints)
 
+	for _, jobProperties := range tileProperties.JobTypes {
+		jobKeys, jobErrs := checkTileProperties(true, fmt.Sprintf(".%s", jobProperties.Name), configFile.ProductProperties, jobProperties.PropertyBlueprints)
+		validKeys = append(validKeys, jobKeys...)
+		errs = append(errs, jobErrs...)
+	}
+
 	for key := range configFile.ProductProperties {
-		if strings.Index(key, prefix) != 0 {
-			errs = append(errs, fmt.Errorf("the config file contains a property (%s) that does not start with %s", key, prefix))
-		} else if !stringInSlice(key, validKeys) {
+		// if strings.Index(key, prefix) != 0 {
+		// 	errs = append(errs, fmt.Errorf("the config file contains a property (%s) that does not start with %s", key, prefix))
+		// } else
+		if !stringInSlice(key, validKeys) {
 			errs = append(errs, fmt.Errorf("the config file contains a property (%s) that is not defined in the tile", key))
 		}
 	}
