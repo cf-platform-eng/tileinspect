@@ -327,7 +327,7 @@ var _ = Describe("CompareProperties", func() {
 				}
 				errs := checkConfig.CompareProperties(configFile, tileProperties)
 				Expect(errs).To(HaveLen(1))
-				Expect(errs[0].Error()).To(ContainSubstring("the config file contains a property (property-one) that does not start with .properties"))
+				Expect(errs[0].Error()).To(ContainSubstring("the config file contains a property (property-one) that is not defined in the tile"))
 			})
 		})
 
