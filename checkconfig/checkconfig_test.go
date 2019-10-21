@@ -957,7 +957,133 @@ var _ = Describe("CompareProperties", func() {
 
 	Context("per job config", func() {
 		BeforeEach(func() {
+			tileProperties = &tileinspect.TileProperties{
+				JobTypes: []tileinspect.JobType{
+					{
+						Name: "per-job-properties",
+						PropertyBlueprints: []tileinspect.TileProperty{
+							{
+								Name:         "property1",
+								Type:         "string",
+								Configurable: true,
+								Optional:     false,
+							},
+						},
+					},
+				},
+			}
+		})
 
+		Context("valid per job config", func() {
+			BeforeEach(func() {
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
+						".per-job-properties.property1": {
+							Value: "value1",
+						},
+					},
+				}
+			})
+
+			It("successfully validates per job config", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(0))
+			})
+		})
+
+		Context("missing job config", func() {
+			BeforeEach(func() {
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{},
+				}
+			})
+			It("raises missing per job config field", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(1))
+				Expect(errs[0].Error()).To(ContainSubstring("the config file is missing a required property (.per-job-properties.property1)"))
+			})
+		})
+	})
+
+	Context("mixed config", func() {
+		BeforeEach(func() {
+			tileProperties = &tileinspect.TileProperties{
+				PropertyBlueprints: []tileinspect.TileProperty{
+					{
+						Name:         "property1",
+						Type:         "string",
+						Configurable: true,
+						Optional:     false,
+					},
+				},
+				JobTypes: []tileinspect.JobType{
+					{
+						Name: "per-job-properties",
+						PropertyBlueprints: []tileinspect.TileProperty{
+							{
+								Name:         "property1",
+								Type:         "string",
+								Configurable: true,
+								Optional:     false,
+							},
+						},
+					},
+				},
+			}
+		})
+
+		Context("successfully validates mixed config", func() {
+			BeforeEach(func() {
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
+						".per-job-properties.property1": {
+							Value: "value1",
+						},
+						".properties.property1": {
+							Value: "value2",
+						},
+					},
+				}
+			})
+
+			It("successfully validates mixed config", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(0))
+			})
+		})
+
+		Context("missing property", func() {
+			BeforeEach(func() {
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
+						".per-job-properties.property1": {
+							Value: "value1",
+						},
+					},
+				}
+			})
+			It("raises missing config field", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(1))
+				Expect(errs[0].Error()).To(ContainSubstring("the config file is missing a required property (.properties.property1)"))
+			})
+		})
+
+		Context("missing job property", func() {
+			BeforeEach(func() {
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
+						".properties.property1": {
+							Value: "value2",
+						},
+					},
+				}
+			})
+			It("raises missing per job config field", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(1))
+				Expect(errs[0].Error()).To(ContainSubstring("the config file is missing a required property (.per-job-properties.property1)"))
+			})
 		})
 	})
 })

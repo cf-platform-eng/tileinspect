@@ -112,6 +112,12 @@ var _ = Describe("tileinspect check-config", func() {
 			steps.When("I run tileinspect check-config")
 			steps.Then("it says the config file is valid")
 		})
+		Scenario("Missing per job config value", func() {
+			steps.Given("I have a tile with a per job properties")
+			steps.And("I have a config missing per job values")
+			steps.When("I run tileinspect check-config")
+			steps.Then("it says the config file is missing per job value")
+		})
 	})
 
 	steps.Define(func(define Definitions) {
@@ -380,6 +386,18 @@ var _ = Describe("tileinspect check-config", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
+		define.Given(`^I have a config missing per job values$`, func() {
+			var err error
+			configFile, err = features.MakeConfigFile(heredoc.Doc(`
+			{
+			  "product-properties": {
+			  }
+			}
+			`))
+			Expect(err).ToNot(HaveOccurred())
+
+		})
+
 		define.When(`^I run tileinspect check-config$`, func() {
 			cmd = exec.Command("go", "run", "../cmd/tileinspect/main.go", "check-config", "-c", configFile.Name(), "-t", tile.Name())
 			var outputBytes []byte
@@ -394,6 +412,11 @@ var _ = Describe("tileinspect check-config", func() {
 
 		define.Then(`^it says that the secret is missing$`, func() {
 			Expect(output).To(ContainSubstring("the config file is missing a required property (.properties.my-secret)"))
+			Expect(exitError).To(HaveOccurred())
+		})
+
+		define.Then(`^it says the config file is missing per job value$`, func() {
+			Expect(output).To(ContainSubstring("the config file is missing a required property (.job_type_1.job_1_value1)"))
 			Expect(exitError).To(HaveOccurred())
 		})
 
