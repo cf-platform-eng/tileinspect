@@ -150,18 +150,7 @@ func (cmd *Config) CompareProperties(configFile *tileinspect.ConfigFile, tilePro
 	validKeys, errs := checkTileProperties(true, prefix, configFile.ProductProperties, tileProperties.PropertyBlueprints)
 
 	for key := range configFile.ProductProperties {
-<<<<<<< Updated upstream
-		if strings.Index(key, prefix) != 0 {
-			errs = append(errs, fmt.Errorf("the config file contains a property (%s) that does not start with %s", key, prefix))
-		} else if !stringInSlice(key, validKeys) {
-||||||| merged common ancestors
-		// if strings.Index(key, prefix) != 0 {
-		// 	errs = append(errs, fmt.Errorf("the config file contains a property (%s) that does not start with %s", key, prefix))
-		// } else
 		if !stringInSlice(key, validKeys) {
-=======
-		if !stringInSlice(key, validKeys) {
->>>>>>> Stashed changes
 			errs = append(errs, fmt.Errorf("the config file contains a property (%s) that is not defined in the tile", key))
 		}
 	}
