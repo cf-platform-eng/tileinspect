@@ -103,6 +103,12 @@ var _ = Describe("tileinspect check-config", func() {
 			steps.When("I run tileinspect check-config")
 			steps.Then("it says the config file configures unconfigurable collection item")
 		})
+		Scenario("Default values", func() {
+			steps.Given("I have a tile file with a collection property and a default value")
+			steps.And("I have a config collection without the value")
+			steps.When("I run tileinspect check-config")
+			steps.Then("it says the config file is valid")
+		})
 	})
 
 	Describe("per job blueprints", func() {
@@ -203,16 +209,6 @@ var _ = Describe("tileinspect check-config", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		define.Given(`^I have a config without collection$`, func() {
-			var err error
-			configFile, err = features.MakeConfigFile(heredoc.Doc(`
-            {
-              "product-properties": {
-              }
-            }`))
-			Expect(err).ToNot(HaveOccurred())
-		})
-
 		define.Given(`^I have a tile with a dropdown_select property$`, func() {
 
 			var err error
@@ -273,6 +269,30 @@ var _ = Describe("tileinspect check-config", func() {
                     optional: false
                     type: string
                     configurable: false
+            `))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		define.Given(`^I have a tile file with a collection property and a default value$`, func() {
+			var err error
+			tile, err = features.MakeTileWithMetadata(heredoc.Doc(`
+			---
+			name: feature-test-tile
+			property_blueprints:
+			  - name: my-collection
+			    configurable: true
+			    type: collection
+			    optional: false
+			    property_blueprints:
+			      - name: property-1
+			        optional: false
+			        type: string
+			        configurable: true
+			        default: ""
+			      - name: property-2
+			        optional: false
+			        type: string
+			        configurable: false
             `))
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -369,6 +389,32 @@ var _ = Describe("tileinspect check-config", func() {
               }
             }
             `))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		define.Given(`^I have a config without collection$`, func() {
+			var err error
+			configFile, err = features.MakeConfigFile(heredoc.Doc(`
+            {
+              "product-properties": {
+			  }
+            }`))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		define.Given(`^I have a config collection without the value$`, func() {
+			var err error
+			configFile, err = features.MakeConfigFile(heredoc.Doc(`
+            {
+              "product-properties": {
+                ".properties.my-collection": {
+                  "value": [
+                    { 
+					}
+				  ]
+				}
+		      }
+            }`))
 			Expect(err).ToNot(HaveOccurred())
 		})
 

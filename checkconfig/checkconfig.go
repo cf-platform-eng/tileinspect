@@ -35,7 +35,7 @@ func checkCollectionProperties(checkForRequiredProperties bool, propertyPrefix s
 
 	if len(*configValues) == 0 {
 		for _, prop := range *tileProperties {
-			if prop.Configurable && !prop.Optional {
+			if prop.Configurable && !prop.Optional && prop.Default == nil {
 				errs = append(errs, fmt.Errorf("collection (%s) is missing required property %s", propertyPrefix, prop.Name))
 			}
 		}
@@ -48,7 +48,7 @@ func checkCollectionProperties(checkForRequiredProperties bool, propertyPrefix s
 							errs = append(errs, fmt.Errorf("collection (%s) contains unconfigurable property %s", propertyPrefix, prop.Name))
 						}
 					} else {
-						if prop.Configurable && !prop.Optional {
+						if prop.Configurable && !prop.Optional && prop.Default == nil {
 							errs = append(errs, fmt.Errorf("collection (%s) is missing required property %s", propertyPrefix, prop.Name))
 						}
 					}

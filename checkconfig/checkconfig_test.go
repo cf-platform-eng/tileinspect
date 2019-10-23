@@ -955,6 +955,69 @@ var _ = Describe("CompareProperties", func() {
 		})
 	})
 
+	Context("tile with a collection with default value", func() {
+		BeforeEach(func() {
+			tileProperties = &tileinspect.TileProperties{
+				PropertyBlueprints: []tileinspect.TileProperty{
+					{
+						Name:         "collection-properties",
+						Type:         "collection",
+						Configurable: true,
+						Optional:     false,
+						PropertyBlueprints: []tileinspect.TileProperty{
+							{
+								Name:         "property1",
+								Type:         "string",
+								Configurable: true,
+								Optional:     false,
+								Default:      "value1",
+							},
+						},
+					},
+				},
+			}
+		})
+
+		Context("allows config with value", func() {
+			BeforeEach(func() {
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
+						".properties.collection-properties": {
+							Value: []interface{}{
+								map[string]interface{}{
+									"property1": "value1",
+								},
+							},
+						},
+					},
+				}
+			})
+
+			It("success with value", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(0))
+			})
+		})
+
+		Context("allows config without value", func() {
+			BeforeEach(func() {
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
+						".properties.collection-properties": {
+							Value: []interface{}{},
+						},
+					},
+				}
+			})
+
+			It("success without value", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(0))
+			})
+		})
+
+	})
+
 	Context("per job config", func() {
 		BeforeEach(func() {
 			tileProperties = &tileinspect.TileProperties{
