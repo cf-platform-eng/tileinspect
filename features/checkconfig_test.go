@@ -86,28 +86,40 @@ var _ = Describe("tileinspect check-config", func() {
 
 	Describe("Collection", func() {
 		Scenario("Valid collection in config", func() {
-			steps.Given("I have a tile file with a collection property")
+			steps.Given("I have a tile with a collection property")
 			steps.And("I have a config with matching collection")
 			steps.When("I run tileinspect check-config")
 			steps.Then("it says the config file is valid")
 		})
 		Scenario("Missing collection", func() {
-			steps.Given("I have a tile file with a collection property")
+			steps.Given("I have a tile with a collection property")
 			steps.And("I have a config without collection")
 			steps.When("I run tileinspect check-config")
 			steps.Then("it says the config file missing collection")
 		})
 		Scenario("Non-configurable collection items", func() {
-			steps.Given("I have a tile file with a collection property")
+			steps.Given("I have a tile with a collection property")
 			steps.And("I have a config with a collection with non-configurable value")
 			steps.When("I run tileinspect check-config")
 			steps.Then("it says the config file configures unconfigurable collection item")
 		})
 		Scenario("Default values", func() {
-			steps.Given("I have a tile file with a collection property and a default value")
+			steps.Given("I have a tile with a collection property and a default value")
 			steps.And("I have a config collection without the value")
 			steps.When("I run tileinspect check-config")
 			steps.Then("it says the config file is valid")
+		})
+		Scenario("Empty value with optional property", func() {
+			steps.Given("I have a tile with an optional collection property")
+			steps.And("I have a config with an empty collection value")
+			steps.When("I run tileinspect check-config")
+			steps.Then("it says the config file is valid")
+		})
+		Scenario("Empty value with required property", func() {
+			steps.Given("I have a tile with a collection property")
+			steps.And("I have a config with an empty collection value")
+			steps.When("I run tileinspect check-config")
+			steps.Then("it says the config file has an empty value for a required collection")
 		})
 	})
 
@@ -250,7 +262,7 @@ var _ = Describe("tileinspect check-config", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		define.Given(`^I have a tile file with a collection property$`, func() {
+		define.Given(`^I have a tile with a collection property$`, func() {
 			var err error
 			tile, err = features.MakeTileWithMetadata(heredoc.Doc(`
             ---
@@ -273,7 +285,30 @@ var _ = Describe("tileinspect check-config", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		define.Given(`^I have a tile file with a collection property and a default value$`, func() {
+		define.Given(`^I have a tile with an optional collection property$`, func() {
+			var err error
+			tile, err = features.MakeTileWithMetadata(heredoc.Doc(`
+            ---
+            name: feature-test-tile
+            property_blueprints:
+              - name: my-collection
+                configurable: true
+                type: collection
+                optional: true
+                property_blueprints:
+                  - name: property-1
+                    optional: false
+                    type: string
+                    configurable: true
+                  - name: property-2
+                    optional: false
+                    type: string
+                    configurable: false
+            `))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		define.Given(`^I have a tile with a collection property and a default value$`, func() {
 			var err error
 			tile, err = features.MakeTileWithMetadata(heredoc.Doc(`
 			---
@@ -418,6 +453,19 @@ var _ = Describe("tileinspect check-config", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
+		define.Given(`^I have a config with an empty collection value$`, func() {
+			var err error
+			configFile, err = features.MakeConfigFile(heredoc.Doc(`
+            {
+              "product-properties": {
+                ".properties.my-collection": {
+                  "value": []
+				}
+		      }
+            }`))
+			Expect(err).ToNot(HaveOccurred())
+		})
+
 		define.Given(`^I have a config with per job values$`, func() {
 			var err error
 			configFile, err = features.MakeConfigFile(heredoc.Doc(`
@@ -488,6 +536,11 @@ var _ = Describe("tileinspect check-config", func() {
 
 		define.Then(`^it says the config file configures unconfigurable collection item$`, func() {
 			Expect(output).To(ContainSubstring(`collection (.properties.my-collection) contains unconfigurable property property-2`))
+			Expect(exitError).To(HaveOccurred())
+		})
+
+		define.Then(`^it says the config file has an empty value for a required collection$`, func() {
+			Expect(output).To(ContainSubstring(`collection (.properties.my-collection) is missing required property property-1`))
 			Expect(exitError).To(HaveOccurred())
 		})
 	})

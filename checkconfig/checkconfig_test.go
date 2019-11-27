@@ -955,6 +955,108 @@ var _ = Describe("CompareProperties", func() {
 		})
 	})
 
+	Context("Tile with an optional collection", func() {
+		BeforeEach(func() {
+			tileProperties = &tileinspect.TileProperties{
+				PropertyBlueprints: []tileinspect.TileProperty{
+					{
+						Name:         "collection-properties",
+						Type:         "collection",
+						Configurable: true,
+						Optional:     true,
+						PropertyBlueprints: []tileinspect.TileProperty{
+							{
+								Name:         "property1",
+								Type:         "string",
+								Configurable: true,
+								Optional:     false,
+							},
+							{
+								Name:         "property2",
+								Type:         "string",
+								Configurable: false,
+							},
+						},
+					},
+				},
+			}
+		})
+
+		Context("Empty config file", func() {
+			BeforeEach(func() {
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{},
+				}
+			})
+
+			It("passes the check", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(0))
+			})
+		})
+
+		Context("Empty config value", func() {
+			BeforeEach(func() {
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
+						".properties.collection-properties": {
+							Value: []interface{}{},
+						},
+					},
+				}
+			})
+
+			It("passes the check", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(0))
+			})
+		})
+
+		Context("Has valid item", func() {
+			BeforeEach(func() {
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
+						".properties.collection-properties": {
+							Value: []interface{}{
+								map[string]interface{}{
+									"property1": "value1",
+								},
+							},
+						},
+					},
+				}
+			})
+
+			It("passes the check", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(0))
+			})
+		})
+
+		Context("Config includes non-configurabe item", func() {
+			BeforeEach(func() {
+				configFile = &tileinspect.ConfigFile{
+					ProductProperties: map[string]*tileinspect.ConfigFileProperty{
+						".properties.collection-properties": {
+							Value: []interface{}{
+								map[string]interface{}{
+									"property1": "value1",
+									"property2": "value2",
+								},
+							},
+						},
+					},
+				}
+			})
+
+			It("raises an error with the non-configurable property", func() {
+				errs := checkConfig.CompareProperties(configFile, tileProperties)
+				Expect(errs).To(HaveLen(1))
+				Expect(errs[0].Error()).To(ContainSubstring("collection (.properties.collection-properties) contains unconfigurable property property2"))
+			})
+		})
+	})
+
 	Context("tile with a collection with default value", func() {
 		BeforeEach(func() {
 			tileProperties = &tileinspect.TileProperties{

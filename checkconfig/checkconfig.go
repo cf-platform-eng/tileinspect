@@ -33,7 +33,7 @@ func checkCollectionProperties(checkForRequiredProperties bool, propertyPrefix s
 	var errs []error
 	var validKeys []string
 
-	if len(*configValues) == 0 {
+	if len(*configValues) == 0 && checkForRequiredProperties {
 		for _, prop := range *tileProperties {
 			if prop.Configurable && !prop.Optional && prop.Default == nil {
 				errs = append(errs, fmt.Errorf("collection (%s) is missing required property %s", propertyPrefix, prop.Name))
@@ -133,7 +133,7 @@ func checkTileProperties(checkForRequiredProperties bool, propertyPrefix string,
 			var values []interface{}
 			var ok bool
 			if values, ok = configValues[propertyKey].Value.([]interface{}); ok {
-				childKeys, childErrs := checkCollectionProperties(checkForRequiredProperties, propertyKey, &values, &(property.PropertyBlueprints))
+				childKeys, childErrs := checkCollectionProperties(!property.Optional, propertyKey, &values, &(property.PropertyBlueprints))
 				validKeys = append(validKeys, childKeys...)
 				errs = append(errs, childErrs...)
 			} else {
