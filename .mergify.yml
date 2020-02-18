@@ -1,0 +1,9 @@
+pull_request_rules:
+  - name: Automatic merge for dependency updates
+    conditions:
+      - "label=dependencies"
+      - "status-success=concourse-ci/status"
+    actions:
+      merge:
+        method: rebase
+
