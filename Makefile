@@ -25,8 +25,17 @@ clean: deps-go-binary
 
 # #### DEPS ####
 
-deps: deps-goimports deps-go-binary
+deps-modules: deps-goimports deps-go-binary
 	go mod download
+
+deps-counterfeiter: deps-modules
+	command -v counterfeiter >/dev/null 2>&1 || go get -u github.com/maxbrunsfeld/counterfeiter/v6
+
+deps-ginkgo: deps-go-binary
+	command -v ginkgo >/dev/null 2>&1 || go get -u github.com/onsi/ginkgo/ginkgo github.com/onsi/gomega
+
+deps: deps-modules deps-counterfeiter deps-ginkgo
+
 
 # #### BUILD ####
 SRC = $(shell find . -name "*.go" | grep -v "_test\." )
