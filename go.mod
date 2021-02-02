@@ -8,6 +8,6 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/onsi/ginkgo v1.14.2
-	github.com/onsi/gomega v1.10.4
+	github.com/onsi/gomega v1.10.5
 	github.com/pkg/errors v0.9.1
 )
