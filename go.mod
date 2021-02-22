@@ -1,13 +1,13 @@
 module github.com/cf-platform-eng/tileinspect
 
-go 1.14
+go 1.15
 
 require (
-	github.com/MakeNowJust/heredoc v0.0.0-20171113091838-e9091a26100e
+	github.com/MakeNowJust/heredoc v1.0.0
 	github.com/bunniesandbeatings/goerkin v0.1.4-beta
 	github.com/ghodss/yaml v1.0.0
 	github.com/jessevdk/go-flags v1.4.0
-	github.com/onsi/ginkgo v1.14.2
-	github.com/onsi/gomega v1.10.4
+	github.com/onsi/ginkgo v1.15.0
+	github.com/onsi/gomega v1.10.5
 	github.com/pkg/errors v0.9.1
 )
