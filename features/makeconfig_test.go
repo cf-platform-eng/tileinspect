@@ -1,3 +1,4 @@
+//go:build feature
 // +build feature
 
 package features_test

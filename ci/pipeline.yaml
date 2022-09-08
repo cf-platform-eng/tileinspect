@@ -1,0 +1,213 @@
+---
+resource_types:
+  - name: pull-request
+    type: docker-image
+    source:
+      repository: harbor-repo.vmware.com/dockerhub-proxy-cache/teliaoss/github-pr-resource
+      username: ((harbor.username))
+      password: ((harbor.token))
+
+resources:
+  - name: source
+    type: git
+    icon: github
+    source:
+      uri: git@github.com:cf-platform-eng/tileinspect.git
+      private_key: ((github.private_key))
+
+  - name: pre-release
+    type: github-release
+    icon: github
+    source:
+        owner: cf-platform-eng
+        repository: tileinspect
+        access_token: ((github.access_token))
+        pre_release: true
+        release: false
+
+  - name: release
+    type: github-release
+    icon: github
+    source:
+        owner: cf-platform-eng
+        repository: tileinspect
+        access_token: ((github.access_token))
+        pre_release: false
+        release: true
+
+  - name: docker-image
+    type: docker-image
+    icon: docker
+    source:
+      repository: projects.registry.vmware.com/tanzu_isv_engineering/tileinspect
+      username: ((harbor-public.username))
+      password: ((harbor-public.token))
+
+  - name: version
+    type: semver
+    source:
+      driver: git
+      uri: git@github.com:cf-platform-eng/isv-ci-versions.git
+      branch: main
+      file: tileinspect
+      private_key: ((github.private_key))
+ 
+  - name: golang-image
+    type: registry-image
+    icon: docker
+    source:
+      repository: harbor-repo.vmware.com/dockerhub-proxy-cache/library/golang
+      tag: 1.19
+      username: ((harbor.username))
+      password: ((harbor.token))
+
+  - name: pull-requests
+    type: pull-request
+    icon: github
+    source:
+      repository: cf-platform-eng/tileinspect
+      access_token: ((github.access_token))
+
+jobs:
+  - name: test
+    plan:
+      - in_parallel:
+        - get: golang-image
+        - get: source
+          trigger: true
+      - task: run-unit-tests
+        image: golang-image
+        file: source/ci/tasks/test.yml
+      - task: run-feature-tests
+        image: golang-image
+        file: source/ci/tasks/test-features.yml
+
+  - name: build
+    serial_groups: [version]
+    plan:
+      - in_parallel:
+        - get: golang-image
+          passed:
+            - test
+        - get: source
+          passed:
+            - test
+          trigger: true
+        - get: version
+          params: { pre: rc }
+      - task: build
+        image: golang-image
+        file: source/ci/tasks/build.yml
+      - put: version
+        inputs: detect
+        params: { file: version/version }
+      - in_parallel:
+        - put: pre-release
+          inputs: detect
+          params:
+            name: version/version
+            tag: version/version
+            globs:
+              - build/*
+        - put: docker-image
+          inputs:
+            - build
+            - source
+            - version
+          params:
+            build: .
+            dockerfile: source/Dockerfile
+            tag_as_latest: false
+            tag_file: version/version
+
+  - name: release
+    serial_groups: [version]
+    plan:
+      - in_parallel:
+        - get: golang-image
+          passed:
+            - build
+        - get: source
+          passed:
+            - build
+        - get: version
+          params: { bump: final }
+      - task: build
+        image: golang-image
+        file: source/ci/tasks/build.yml
+      - in_parallel:
+        - put: release
+          inputs: detect
+          params:
+            name: version/version
+            tag: version/version
+            globs:
+              - build/*
+        - put: docker-image
+          inputs:
+            - build
+            - source
+            - version
+          params:
+            build: .
+            dockerfile: source/Dockerfile
+            tag_as_latest: true
+            tag_file: version/version
+      - put: version
+        inputs: detect
+        params: { bump: patch }
+          
+  - name: bump-major-version
+    serial_groups: [version]
+    plan:
+      - put: version
+        inputs: detect
+        params:
+          bump: major
+
+  - name: bump-minor-version
+    serial_groups: [version]
+    plan:
+      - put: version
+        inputs: detect
+        params:
+          bump: minor
+
+  - name: test-pull-request
+    serial: true
+    plan:
+      - get: golang-image
+      - get: source
+        resource: pull-requests
+        trigger: true
+        version: every
+        params:
+          integration_tool: rebase
+      - put: pull-requests
+        inputs: detect
+        params:
+          path: source
+          status: pending
+      - task: run-unit-tests
+        image: golang-image
+        file: source/ci/tasks/test.yml
+        on_failure:
+          put: pull-requests
+          inputs: detect
+          params:
+            path: source
+            status: failure
+      - task: run-feature-tests
+        image: golang-image
+        file: source/ci/tasks/test-features.yml
+        on_failure:
+          put: pull-requests
+          inputs: detect
+          params:
+            path: source
+            status: failure
+      - put: pull-requests
+        inputs: detect
+        params:
+          path: source
+          status: success

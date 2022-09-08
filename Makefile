@@ -1,5 +1,5 @@
 SHELL = /bin/bash
-GO-VER = go1.17
+GO-VER = go1.19
 
 default: build
 
@@ -9,19 +9,14 @@ deps-go-binary:
 		echo "Actual: $$(go version)" && \
 	 	go version | grep $(GO-VER) > /dev/null
 
-
 HAS_GO_IMPORTS := $(shell command -v goimports;)
 
-deps-goimports: deps-go-binary
-ifndef HAS_GO_IMPORTS
-	go get -u golang.org/x/tools/cmd/goimports
-endif
 
 # #### CLEAN ####
+
 clean: deps-go-binary
 	rm -rf build/*
 	go clean --modcache
-
 
 # #### DEPS ####
 
@@ -29,19 +24,22 @@ deps-modules: deps-goimports deps-go-binary
 	go mod download
 
 deps-counterfeiter: deps-modules
-	command -v counterfeiter >/dev/null 2>&1 || go get -u github.com/maxbrunsfeld/counterfeiter/v6
+	go install github.com/maxbrunsfeld/counterfeiter/v6@latest
 
 deps-ginkgo: deps-go-binary
-	command -v ginkgo >/dev/null 2>&1 || go get -u github.com/onsi/ginkgo/ginkgo github.com/onsi/gomega
+	go install github.com/onsi/ginkgo/ginkgo@latest
+
+deps-goimports: deps-go-binary
+ifndef HAS_GO_IMPORTS
+	go install golang.org/x/tools/cmd/goimports
+endif
 
 deps: deps-modules deps-counterfeiter deps-ginkgo
 
-
 # #### BUILD ####
+
 SRC = $(shell find . -name "*.go" | grep -v "_test\." )
-
-VERSION := $(or $(VERSION), "dev")
-
+VERSION := $(or $(VERSION), dev)
 LDFLAGS="-X github.com/cf-platform-eng/tileinspect/version.Version=$(VERSION)"
 
 build/tileinspect: $(SRC) deps
@@ -64,6 +62,7 @@ build/tileinspect-darwin:
 build-image: build/tileinspect-linux
 	docker build --tag cfplatformeng/tileinspect:${VERSION} --file Dockerfile .
 
+# #### TESTS ####
 test: deps lint
 	ginkgo -skipPackage features -r .
 
@@ -72,3 +71,7 @@ test-features: deps lint
 
 lint: deps-goimports
 	git ls-files | grep '.go$$' | xargs goimports -l -w
+
+.PHONY: set-pipeline
+set-pipeline: ci/pipeline.yaml
+	fly -t ppe-isv set-pipeline -p tileinspect -c ci/pipeline.yaml
