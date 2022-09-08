@@ -31,7 +31,7 @@ deps-ginkgo: deps-go-binary
 
 deps-goimports: deps-go-binary
 ifndef HAS_GO_IMPORTS
-	go install golang.org/x/tools/cmd/goimports
+	go install golang.org/x/tools/cmd/goimports@latest
 endif
 
 deps: deps-modules deps-counterfeiter deps-ginkgo
