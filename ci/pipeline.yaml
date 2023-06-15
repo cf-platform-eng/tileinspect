@@ -67,6 +67,7 @@ resources:
     source:
       repository: cf-platform-eng/tileinspect
       access_token: ((github.access_token))
+      disable_forks: true
 
 jobs:
   - name: test
