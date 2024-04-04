@@ -1,11 +1,11 @@
 ---
 resource_types:
   - name: pull-request
-    type: docker-image
+    type: registry-image
     source:
-      repository: harbor-repo.vmware.com/dockerhub-proxy-cache/teliaoss/github-pr-resource
-      username: ((harbor.username))
-      password: ((harbor.token))
+      repository: mirror.gcr.io/teliaoss/github-pr-resource
+      username: _json_key
+      password: ((gcp_artifact_registry.service_account_key))
 
 resources:
   - name: source
@@ -39,9 +39,9 @@ resources:
     type: docker-image
     icon: docker
     source:
-      repository: projects.registry.vmware.com/tanzu_isv_engineering/tileinspect
-      username: ((harbor-public.username))
-      password: ((harbor-public.token))
+      repository: us-west1-docker.pkg.dev/isv-tile-partners/tanzu-isv-engineering/tileinspect
+      username: _json_key
+      password: ((gcp_artifact_registry.service_account_key))
 
   - name: version
     type: semver
@@ -56,10 +56,10 @@ resources:
     type: registry-image
     icon: docker
     source:
-      repository: harbor-repo.vmware.com/dockerhub-proxy-cache/library/golang
+      repository: mirror.gcr.io/golang
       tag: 1.19
-      username: ((harbor.username))
-      password: ((harbor.token))
+      username: _json_key
+      password: ((gcp_artifact_registry.service_account_key))
 
   - name: pull-requests
     type: pull-request
