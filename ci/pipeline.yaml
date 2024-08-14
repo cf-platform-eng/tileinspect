@@ -47,10 +47,11 @@ resources:
     type: semver
     source:
       driver: git
-      uri: git@((git.org_url)/isv-ci-versions.git
+      uri: ((github.org_url))/isv-ci-versions.git
       branch: main
       file: tileinspect
-      private_key: ((github.private_key))
+      username: ((github.username))
+      password: ((github.broadcom_github_personal_access_token))
  
   - name: golang-image
     type: registry-image
