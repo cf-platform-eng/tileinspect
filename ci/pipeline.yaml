@@ -58,7 +58,7 @@ resources:
     icon: docker
     source:
       repository: mirror.gcr.io/golang
-      tag: 1.19
+      tag: 1.23
       username: _json_key
       password: ((gcp_artifact_registry.service_account_key))
 
