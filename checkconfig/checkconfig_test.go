@@ -1,7 +1,6 @@
 package checkconfig_test
 
 import (
-	"io/ioutil"
 	"os"
 
 	"github.com/MakeNowJust/heredoc"
@@ -15,7 +14,7 @@ import (
 )
 
 func makeConfigFile(contents string) (*os.File, error) {
-	configFile, err := ioutil.TempFile("", "config-file")
+	configFile, err := os.CreateTemp("", "config-file")
 	if err != nil {
 		return nil, err
 	}

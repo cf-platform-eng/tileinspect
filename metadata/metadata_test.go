@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/MakeNowJust/heredoc"
@@ -22,7 +21,7 @@ func (w *BadWriter) Write(p []byte) (int, error) {
 }
 
 func CreateTestTileWithMetadata(metadata string) (*os.File, error) {
-	file, err := ioutil.TempFile(".", "test-tile-*.pivotal")
+	file, err := os.CreateTemp(".", "test-tile-*.pivotal")
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +124,7 @@ var _ = Describe("LoadMetadata", func() {
 	Context("Invalid tile file", func() {
 		BeforeEach(func() {
 			var err error
-			tile, err = ioutil.TempFile(".", "not-a-zip-file-*.pivotal")
+			tile, err = os.CreateTemp(".", "not-a-zip-file-*.pivotal")
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -270,7 +269,7 @@ var _ = Describe("WriteMetadata", func() {
 	Context("Invalid tile file", func() {
 		BeforeEach(func() {
 			var err error
-			tile, err = ioutil.TempFile(".", "not-a-zip-file-*.pivotal")
+			tile, err = os.CreateTemp(".", "not-a-zip-file-*.pivotal")
 			Expect(err).ToNot(HaveOccurred())
 		})
 
