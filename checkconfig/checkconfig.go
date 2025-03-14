@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -165,7 +164,7 @@ func (cmd *Config) CompareProperties(configFile *tileinspect.ConfigFile, tilePro
 }
 
 func (cmd *Config) CheckConfig(out io.Writer) error {
-	configFileContents, err := ioutil.ReadFile(cmd.ConfigFilePath)
+	configFileContents, err := os.ReadFile(cmd.ConfigFilePath)
 	if err != nil {
 		return Wrapf(err, "failed to read the config file: %s", cmd.ConfigFilePath)
 	}

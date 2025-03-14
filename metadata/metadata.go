@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"errors"
 	"io"
-	"io/ioutil"
 	"os"
 	"regexp"
 
@@ -36,7 +35,7 @@ func (cmd *Config) dumpFile(zipFile *zip.File, out io.Writer) error {
 	defer inFile.Close()
 
 	if cmd.Format == "json" {
-		buf, err := ioutil.ReadAll(inFile)
+		buf, err := io.ReadAll(inFile)
 		if err != nil {
 			return err
 		}
@@ -80,7 +79,7 @@ func (cmd *Config) LoadMetadata(target interface{}) error {
 	}
 	defer file.Close()
 
-	buf, err := ioutil.ReadAll(file)
+	buf, err := io.ReadAll(file)
 	if err != nil {
 		return Wrap(err, "could not read the metadata file")
 	}
