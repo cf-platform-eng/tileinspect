@@ -129,7 +129,7 @@ jobs:
             name: version/version
             tag: version/version
             globs:
-              - build/*
+              - tileinspect-build/*
         - do:
           - get: oci-build-task
           - get: ubuntu-image
@@ -144,7 +144,7 @@ jobs:
               platform: linux
               inputs:
                 - name: source
-                - name: build
+                - name: tileinspect-build
                 - name: ubuntu-image
               outputs:
                 - name: image
@@ -183,7 +183,7 @@ jobs:
             name: version/version
             tag: version/version
             globs:
-              - build/*
+              - tileinspect-build/*
         - do:
           - get: oci-build-task
           - get: ubuntu-image
@@ -198,7 +198,7 @@ jobs:
               platform: linux
               inputs:
                 - name: source
-                - name: build
+                - name: tileinspect-build
                 - name: ubuntu-image
               outputs:
                 - name: image

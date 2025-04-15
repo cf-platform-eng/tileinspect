@@ -16,5 +16,5 @@ run:
       popd
       
 outputs:
-  - name: build
+  - name: tileinspect-build
     path: source/build
