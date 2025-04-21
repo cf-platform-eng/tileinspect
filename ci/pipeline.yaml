@@ -8,6 +8,16 @@ resource_types:
       password: ((gcp_artifact_registry.service_account_key))
 
 resources:
+  - name: oci-build-task
+    type: registry-image
+    check_every: 4h
+    icon: oci
+    source:
+      repository: ((artifactory.registry_mirror))/concourse/oci-build-task
+      tag: 0.11.1
+      username: ((artifactory.production_username))
+      password: ((artifactory.production_password))
+
   - name: source
     type: git
     icon: github
@@ -36,12 +46,12 @@ resources:
         release: true
 
   - name: docker-image
-    type: docker-image
-    icon: docker
+    type: registry-image
+    icon: oci
     source:
-      repository: us-west1-docker.pkg.dev/isv-tile-partners/tanzu-isv-engineering/tileinspect
-      username: _json_key
-      password: ((gcp_artifact_registry.service_account_key))
+      repository: tas-ecosystem-docker-prod-local.usw1.packages.broadcom.com/tanzu-isv-engineering/tileinspect
+      username: ((artifactory.production_username))
+      password: ((artifactory.production_password))
 
   - name: version
     type: semver
@@ -55,12 +65,21 @@ resources:
  
   - name: golang-image
     type: registry-image
-    icon: docker
+    icon: oci
     source:
-      repository: mirror.gcr.io/golang
+      repository: ((artifactory.registry_mirror)/golang
       tag: 1.23
-      username: _json_key
-      password: ((gcp_artifact_registry.service_account_key))
+      username: ((artifactory.production_username))
+      password: ((artifactory.production_password))
+
+  - name: ubuntu-image
+    type: registry-image
+    icon: oci
+    source:
+      repository: ((artifactory.registry_mirror)/ubuntu
+      tag: latest
+      username: ((artifactory.production_username))
+      password: ((artifactory.production_password))
 
   - name: pull-requests
     type: pull-request
@@ -110,18 +129,38 @@ jobs:
             name: version/version
             tag: version/version
             globs:
-              - build/*
-        - put: docker-image
-          inputs:
-            - build
-            - source
-            - version
-          params:
-            build: .
-            dockerfile: source/Dockerfile
-            tag_as_latest: false
-            tag_file: version/version
-
+              - tileinspect-build/*
+        - do:
+          - get: oci-build-task
+          - get: ubuntu-image
+            params:
+              format: oci
+          - file: version/version
+            load_var: image_version
+          - task: build-oci
+            privileged: true
+            image: oci-build-task
+            config:
+              platform: linux
+              inputs:
+                - name: source
+                - name: tileinspect-build
+                - name: ubuntu-image
+              outputs:
+                - name: image
+              params:
+                CONTEXT: .
+                DOCKERFILE: source/Dockerfile
+                IMAGE_ARG_base_image: ubuntu-image/image.tar
+              run:
+                path: build
+            output_mapping:
+              image: docker-image-out
+          - put: docker-image
+            attempts: 3
+            params:
+              image: docker-image-out/image.tar
+              version: ((.:image_version))
   - name: release
     serial_groups: [version]
     plan:
@@ -144,17 +183,39 @@ jobs:
             name: version/version
             tag: version/version
             globs:
-              - build/*
-        - put: docker-image
-          inputs:
-            - build
-            - source
-            - version
-          params:
-            build: .
-            dockerfile: source/Dockerfile
-            tag_as_latest: true
-            tag_file: version/version
+              - tileinspect-build/*
+        - do:
+          - get: oci-build-task
+          - get: ubuntu-image
+            params:
+              format: oci
+          - file: version/version
+            load_var: image_version
+          - task: build-oci
+            privileged: true
+            image: oci-build-task
+            config:
+              platform: linux
+              inputs:
+                - name: source
+                - name: tileinspect-build
+                - name: ubuntu-image
+              outputs:
+                - name: image
+              params:
+                CONTEXT: .
+                DOCKERFILE: source/Dockerfile
+                IMAGE_ARG_base_image: ubuntu-image/image.tar
+              run:
+                path: build
+            output_mapping:
+              image: docker-image-out
+          - put: docker-image
+            attempts: 3
+            params:
+              image: docker-image-out/image.tar
+              version: ((.:image_version))
+              bump_aliases: true
       - put: version
         inputs: detect
         params: { bump: patch }
