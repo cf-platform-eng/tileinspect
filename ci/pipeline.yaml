@@ -67,7 +67,7 @@ resources:
     type: registry-image
     icon: oci
     source:
-      repository: ((artifactory.registry_mirror)/golang
+      repository: ((artifactory.registry_mirror))/golang
       tag: 1.23
       username: ((artifactory.production_username))
       password: ((artifactory.production_password))
@@ -76,7 +76,7 @@ resources:
     type: registry-image
     icon: oci
     source:
-      repository: ((artifactory.registry_mirror)/ubuntu
+      repository: ((artifactory.registry_mirror))/ubuntu
       tag: latest
       username: ((artifactory.production_username))
       password: ((artifactory.production_password))
