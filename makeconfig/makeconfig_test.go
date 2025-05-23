@@ -5,7 +5,7 @@ import (
 	"github.com/cf-platform-eng/tileinspect/makeconfig"
 	"github.com/cf-platform-eng/tileinspect/tileinspectfakes"
 	"github.com/ghodss/yaml"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

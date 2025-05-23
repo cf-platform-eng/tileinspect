@@ -11,7 +11,7 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	. "github.com/bunniesandbeatings/goerkin"
 	"github.com/cf-platform-eng/tileinspect/features"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
