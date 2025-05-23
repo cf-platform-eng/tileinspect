@@ -47,19 +47,28 @@ build/tileinspect: $(SRC) deps
 
 build: build/tileinspect
 
-build-all: build-linux build-darwin
+build-all: build-linux build-darwin build-windows
 
-build-linux: build/tileinspect-linux
+build-linux: build/tileinspect-linux-amd64 build/tileinspect-linux-arm64
+build/tileinspect-linux-amd64:
+	GOARCH=amd64 GOOS=linux go build -o build/tileinspect-linux-amd64 -ldflags ${LDFLAGS} ./cmd/tileinspect/main.go
+build/tileinspect-linux-arm64:
+	GOARCH=arm64 GOOS=linux go build -o build/tileinspect-linux-arm64 -ldflags ${LDFLAGS} ./cmd/tileinspect/main.go
 
-build/tileinspect-linux:
-	GOARCH=amd64 GOOS=linux go build -o build/tileinspect-linux -ldflags ${LDFLAGS} ./cmd/tileinspect/main.go
 
-build-darwin: build/tileinspect-darwin
+build-darwin: build/tileinspect-darwin-amd64 build/tileinspect-darwin-arm64
+build/tileinspect-darwin-amd64:
+	GOARCH=amd64 GOOS=darwin go build -o build/tileinspect-darwin-amd64 -ldflags ${LDFLAGS} ./cmd/tileinspect/main.go
+build/tileinspect-darwin-arm64:
+	GOARCH=arm64 GOOS=darwin go build -o build/tileinspect-darwin-arm64 -ldflags ${LDFLAGS} ./cmd/tileinspect/main.go
 
-build/tileinspect-darwin:
-	GOARCH=amd64 GOOS=darwin go build -o build/tileinspect-darwin -ldflags ${LDFLAGS} ./cmd/tileinspect/main.go
+build-windows: build/tileinspect-windows-amd64.exe build/tileinspect-windows-arm64.exe
+build/tileinspect-windows-amd64.exe:
+	GOARCH=amd64 GOOS=windows go build -o build/tileinspect-windows-amd64.exe -ldflags ${LDFLAGS} ./cmd/tileinspect/main.go
+build/tileinspect-windows-arm64.exe:
+	GOARCH=arm64 GOOS=windows go build -o build/tileinspect-windows-arm64.exe -ldflags ${LDFLAGS} ./cmd/tileinspect/main.go
 
-build-image: build/tileinspect-linux
+build-image: build/tileinspect-linux-amd64
 	docker build --tag cfplatformeng/tileinspect:${VERSION} --file Dockerfile .
 
 # #### TESTS ####
