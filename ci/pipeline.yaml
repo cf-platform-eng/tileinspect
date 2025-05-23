@@ -3,9 +3,9 @@ resource_types:
   - name: pull-request
     type: registry-image
     source:
-      repository: mirror.gcr.io/teliaoss/github-pr-resource
-      username: _json_key
-      password: ((gcp_artifact_registry.service_account_key))
+      repository: ((artifactory.registry_mirror))/teliaoss/github-pr-resource
+      username: ((artifactory.production_username))
+      password: ((artifactory.production_password))
 
 resources:
   - name: oci-build-task
