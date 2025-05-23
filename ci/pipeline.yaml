@@ -68,7 +68,7 @@ resources:
     icon: oci
     source:
       repository: ((artifactory.registry_mirror))/golang
-      tag: 1.23
+      tag: 1.24
       username: ((artifactory.production_username))
       password: ((artifactory.production_password))
 
@@ -158,6 +158,7 @@ jobs:
               image: docker-image-out
           - put: docker-image
             attempts: 3
+            inputs: detect
             params:
               image: docker-image-out/image.tar
               version: ((.:image_version))
@@ -212,6 +213,7 @@ jobs:
               image: docker-image-out
           - put: docker-image
             attempts: 3
+            inputs: detect
             params:
               image: docker-image-out/image.tar
               version: ((.:image_version))

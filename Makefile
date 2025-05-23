@@ -1,5 +1,5 @@
 SHELL = /bin/bash
-GO-VER = go1.23
+GO-VER = go1.24
 
 default: build
 
