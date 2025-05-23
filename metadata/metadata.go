@@ -12,8 +12,11 @@ import (
 	. "github.com/pkg/errors"
 )
 
+
 type Config struct {
 	tileinspect.TileConfig
+	// duplicate choice required by go-flags
+	// nolint:staticcheck
 	Format string `long:"format" short:"f" description:"output file type" choice:"yaml" choice:"json" default:"yaml"`
 }
 
