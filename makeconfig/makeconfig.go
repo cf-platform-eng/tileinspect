@@ -14,6 +14,8 @@ import (
 
 type Config struct {
 	tileinspect.TileConfig
+	//duplicate choice required by go-flags
+	// nolint:staticcheck
 	Format      string            `long:"format" short:"f" description:"output file type" choice:"yaml" choice:"json" default:"yaml"`
 	Values      map[string]string `long:"value" short:"v" description:"set a value for a given property with the format: .properties.key:value"`
 	MetadataCmd tileinspect.MetadataCmd

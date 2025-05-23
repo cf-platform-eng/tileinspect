@@ -26,7 +26,10 @@ deps-counterfeiter: deps-modules
 deps-ginkgo: deps-go-binary
 	go install github.com/onsi/ginkgo/v2/ginkgo@latest
 
-deps: deps-modules deps-counterfeiter deps-ginkgo
+deps-golangci-lint:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+deps: deps-modules deps-counterfeiter deps-ginkgo deps-golangci-lint
 
 # #### BUILD ####
 
@@ -70,8 +73,8 @@ test: deps lint
 test-features: deps lint
 	ginkgo -tags feature -r features
 
-lint:
-	git ls-files | grep '.go$$' | xargs goimports -l -w
+lint: deps-golangci-lint
+	golangci-lint run
 
 .PHONY: set-pipeline
 set-pipeline: ci/pipeline.yaml

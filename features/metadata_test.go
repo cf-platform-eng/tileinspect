@@ -9,7 +9,7 @@ import (
 	"os/exec"
 
 	"github.com/MakeNowJust/heredoc"
-	. "github.com/bunniesandbeatings/goerkin"
+	. "github.com/bunniesandbeatings/goerkin/v2"
 	"github.com/cf-platform-eng/tileinspect/features"
 	"github.com/ghodss/yaml"
 	. "github.com/onsi/ginkgo/v2"
