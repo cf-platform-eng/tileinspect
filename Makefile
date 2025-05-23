@@ -9,9 +9,6 @@ deps-go-binary:
 		echo "Actual: $$(go version)" && \
 	 	go version | grep $(GO-VER) > /dev/null
 
-HAS_GO_IMPORTS := $(shell command -v goimports;)
-
-
 # #### CLEAN ####
 
 clean: deps-go-binary
@@ -20,19 +17,14 @@ clean: deps-go-binary
 
 # #### DEPS ####
 
-deps-modules: deps-goimports deps-go-binary
+deps-modules: deps-go-binary
 	go mod download
 
 deps-counterfeiter: deps-modules
 	go install github.com/maxbrunsfeld/counterfeiter/v6@latest
 
 deps-ginkgo: deps-go-binary
-	go install github.com/onsi/ginkgo/ginkgo@latest
-
-deps-goimports: deps-go-binary
-ifndef HAS_GO_IMPORTS
-	go install golang.org/x/tools/cmd/goimports@latest
-endif
+	go install github.com/onsi/ginkgo/v2/ginkgo@latest
 
 deps: deps-modules deps-counterfeiter deps-ginkgo
 
@@ -73,12 +65,12 @@ build-image: build/tileinspect-linux-amd64
 
 # #### TESTS ####
 test: deps lint
-	ginkgo -skipPackage features -r .
+	ginkgo -skip-package features -r .
 
 test-features: deps lint
 	ginkgo -tags feature -r features
 
-lint: deps-goimports
+lint:
 	git ls-files | grep '.go$$' | xargs goimports -l -w
 
 .PHONY: set-pipeline

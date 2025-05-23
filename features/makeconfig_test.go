@@ -12,7 +12,7 @@ import (
 	"github.com/cf-platform-eng/tileinspect"
 	"github.com/cf-platform-eng/tileinspect/features"
 	"github.com/ghodss/yaml"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
