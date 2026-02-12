@@ -9,7 +9,7 @@ require (
 	github.com/bunniesandbeatings/goerkin/v2 v2.0.0-20231115001327-55ed25a6ab5e
 	github.com/ghodss/yaml v1.0.0
 	github.com/jessevdk/go-flags v1.6.1
-	github.com/onsi/ginkgo/v2 v2.28.0
+	github.com/onsi/ginkgo/v2 v2.28.1
 	github.com/onsi/gomega v1.39.1
 	github.com/pkg/errors v0.9.1
 )
